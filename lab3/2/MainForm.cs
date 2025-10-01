@@ -9,6 +9,14 @@ namespace lab2
         {
             InitializeComponent();
             this.Resize += (s, e) => this.Invalidate();
+
+            modeSelector.Items.AddRange(["Обычный Ву", "Ву с шаблоном"]);
+            modeSelector.SelectedIndex = 0;
+            modeSelector.SelectedIndexChanged += (s, e) =>
+            {
+                LineAlgorithms.PatternOn = (modeSelector.SelectedIndex == 1);
+                this.Invalidate();
+            };
         }
 
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
@@ -54,8 +62,8 @@ namespace lab2
 
                 LineAlgorithms.DrawLineWu(e.Graphics, leftP0, leftP1, new Rectangle(midX, 0, midX, height), Color.Black);
 
-                DrawPointRightSide(e.Graphics, leftP0, Color.Red, midX);
-                DrawPointRightSide(e.Graphics, leftP1, Color.Red, midX);
+                DrawPoint(e.Graphics, leftP0, Color.Red, midX);
+                DrawPoint(e.Graphics, leftP1, Color.Red, midX);
             }
 
             if (firstPoint != null)
@@ -65,13 +73,7 @@ namespace lab2
             }
         }
 
-        private void DrawPoint(Graphics g, Point p, Color color)
-        {
-            int size = 6;
-            g.FillEllipse(new SolidBrush(color), p.X - size / 2, p.Y - size / 2, size, size);
-        }
-
-        private void DrawPointRightSide(Graphics g, Point p, Color color, int offsetX)
+        private void DrawPoint(Graphics g, Point p, Color color, int offsetX = 0)
         {
             int size = 6;
             g.FillEllipse(new SolidBrush(color), p.X - size / 2 + offsetX, p.Y - size / 2, size, size);

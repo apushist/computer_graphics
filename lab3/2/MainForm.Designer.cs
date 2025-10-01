@@ -28,20 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
+            modeSelector = new ComboBox();
             SuspendLayout();
+            // 
+            // modeSelector
+            // 
+            modeSelector.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            modeSelector.FormattingEnabled = true;
+            modeSelector.Location = new Point(610, 3);
+            modeSelector.Name = "modeSelector";
+            modeSelector.Size = new Size(170, 28);
+            modeSelector.TabIndex = 0;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(modeSelector);
             DoubleBuffered = true;
             Name = "MainForm";
-            Text = "Form1";
+            Text = "Брезенхам (слева) и Ву (справа)";
             MouseClick += MainForm_MouseClick;
             ResumeLayout(false);
         }
 
         #endregion
+
+        private ComboBox modeSelector;
     }
 }
