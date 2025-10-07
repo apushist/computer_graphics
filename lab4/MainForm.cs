@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xaml.Permissions;
 
 namespace lab4
 {
@@ -250,9 +251,8 @@ namespace lab4
 				return;
 			}
 			labelMessage.Visible = false;
-			drawingBox.Invalidate();
 			panelScaling.Visible = false;
-
+			leftRightPoint = null;
 			if (isIntersectionMode)
 			{
 				HandleIntersectionClick(e.Location);
@@ -368,8 +368,8 @@ namespace lab4
 					labelMessage.Visible = true;
 				}
 				isIntersectionMode = false;
-				secondEdge = null;
 				firstEdge = null;
+				secondEdge = null;
 				drawingBox.Invalidate();
 			}
 		}
@@ -492,6 +492,35 @@ namespace lab4
 								MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
 			}
+			leftRightPoint = clickPoint;
+			drawingBox.Invalidate();
+			int x0 = firstEdge.Points[1].X;
+			int y0 = firstEdge.Points[1].Y;
+			int xa = firstEdge.Points[0].X-x0;
+			int ya = firstEdge.Points[0].Y-y0;
+			int xb = leftRightPoint.Value.X-x0;
+			int yb = leftRightPoint.Value.Y-y0;
+
+			if (yb * xa - xb * ya < 0)
+			{
+				labelMessage.Text = "Точка лежит справа от ребра";
+				labelMessage.Visible = true;
+			}
+			else if (yb * xa - xb * ya > 0)
+			{
+				labelMessage.Text = "Точка лежит слева от ребра";
+				labelMessage.Visible = true;
+			}
+			else
+			{
+				labelMessage.Text = "Точка лежит на ребре";
+				labelMessage.Visible = true;
+			}
+
+			isLeftRightMode = false;
+			firstEdge = null;
+
+			drawingBox.Invalidate();
 
 		}
 
