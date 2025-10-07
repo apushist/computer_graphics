@@ -8,6 +8,7 @@ namespace lab4
     public abstract class Shape
     {
         public List<Point> Points { get; set; } = new();
+        public List<Point> ogPoints { get; set; } = new();//for correct scaling
         public Color Color { get; set; } = Color.Purple;
 
         public abstract void Draw(Graphics g);
@@ -16,7 +17,55 @@ namespace lab4
             const int eps = 5;
             return Points.Any(p => Math.Abs(p.X - point.X) < eps && Math.Abs(p.Y - point.Y) < eps);
         }
-    }
+
+		public Point GetCenter()
+		{
+			if (Points == null || Points.Count == 0)
+			{
+				return Point.Empty;
+			}
+
+			double sumX = 0;
+			double sumY = 0;
+
+			foreach (Point p in Points)
+			{
+				sumX += p.X;
+				sumY += p.Y;
+			}
+
+			int centerX = (int)(sumX / Points.Count);
+			int centerY = (int)(sumY / Points.Count);
+
+			return new Point(centerX, centerY);
+		}
+
+
+		public void Scale(float scaleFactor, Point scaleOrigin)
+		{
+			if (Points == null || Points.Count == 0)
+			{
+				return;
+			}
+            
+			var scaledPoints = new List<Point>();
+			foreach (Point p in ogPoints)
+			{
+				float vectorX = p.X - scaleOrigin.X;
+				float vectorY = p.Y - scaleOrigin.Y;
+
+				float scaledVectorX = vectorX * scaleFactor;
+				float scaledVectorY = vectorY * scaleFactor;
+
+				int newX = (int)Math.Round(scaleOrigin.X + scaledVectorX);
+				int newY = (int)Math.Round(scaleOrigin.Y + scaledVectorY);
+
+				scaledPoints.Add(new Point(newX, newY));
+			}
+
+			Points = scaledPoints;
+		}
+	}
 
     public class PointShape : Shape
     {
@@ -55,6 +104,6 @@ namespace lab4
             using var path = new GraphicsPath();
             path.AddPolygon(Points.ToArray());
             return path.IsVisible(p);
-        }
-    }
+        }		
+	}
 }
