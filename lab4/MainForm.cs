@@ -431,7 +431,7 @@ namespace lab4
 			int scale = 100;
 			if (int.TryParse(textBoxScaling.Text, out scale))
 			{
-				selectedShape.Scale(1.0f * scale / 100, scalingPoint);
+				AffineTransform.ApplyScale(selectedShape, scalingPoint, 1.0f * scale / 100);
 				drawingBox.Invalidate();
 				labelMessage.Text = "Масштаб изменен на " + scale + "% изначального";
 				labelMessage.Visible = true;

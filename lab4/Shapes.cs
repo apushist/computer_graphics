@@ -39,32 +39,7 @@ namespace lab4
 
 			return new Point(centerX, centerY);
 		}
-
-
-		public void Scale(float scaleFactor, Point scaleOrigin)
-		{
-			if (Points == null || Points.Count == 0)
-			{
-				return;
-			}
-            
-			var scaledPoints = new List<Point>();
-			foreach (Point p in ogPoints)
-			{
-				float vectorX = p.X - scaleOrigin.X;
-				float vectorY = p.Y - scaleOrigin.Y;
-
-				float scaledVectorX = vectorX * scaleFactor;
-				float scaledVectorY = vectorY * scaleFactor;
-
-				int newX = (int)Math.Round(scaleOrigin.X + scaledVectorX);
-				int newY = (int)Math.Round(scaleOrigin.Y + scaledVectorY);
-
-				scaledPoints.Add(new Point(newX, newY));
-			}
-
-			Points = scaledPoints;
-		}
+		
 	}
 
     public class PointShape : Shape
