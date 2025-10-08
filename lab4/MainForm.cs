@@ -305,6 +305,7 @@ namespace lab4
             labelMessage.Visible = false;
             panelScaling.Visible = false;
             leftRightPoint = null;
+            rotationCenter = null;
             if (isIntersectionMode)
             {
                 HandleIntersectionClick(e.Location);
@@ -391,10 +392,18 @@ namespace lab4
                             drawingBox.Invalidate();
                             return;
                         }
-                    }
+						MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
+								MessageBoxButtons.OK, MessageBoxIcon.Information);
+					}
                 }
-                MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                else
+                {
+					labelMessage.Text = "У точки нет ребер";
+					labelMessage.Visible = true;
+                    isIntersectionMode = false;
+                    return;
+				}
+                
                 return;
             }
 
@@ -538,10 +547,18 @@ namespace lab4
                             drawingBox.Invalidate();
                             return;
                         }
-                    }
+						MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
+								MessageBoxButtons.OK, MessageBoxIcon.Information);
+					}
                 }
-                MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+				else
+				{
+					labelMessage.Text = "У точки нет ребер";
+					labelMessage.Visible = true;
+					isIntersectionMode = false;
+					return;
+				}
+				
                 return;
             }
             leftRightPoint = clickPoint;
