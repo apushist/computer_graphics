@@ -79,7 +79,42 @@ namespace lab4
 			}
 			shape.Points = scaledPoints;
 		}
-	}
 
+        public static float[,] CreateRotationMatrix(float angle, Point center)
+        {
+            float cos = (float)Math.Cos(angle);
+            float sin = (float)Math.Sin(angle);
+            float centerX = center.X;
+            float centerY = center.Y;
+
+            return new float[3, 3] {
+        { cos, -sin, centerX * (1 - cos) + centerY * sin },
+        { sin, cos, centerY * (1 - cos) - centerX * sin },
+        { 0, 0, 1 }
+    };
+        }
+
+        public static Point TransformPoint(Point point, float[,] matrix)
+        {
+            float x = matrix[0, 0] * point.X + matrix[0, 1] * point.Y + matrix[0, 2];
+            float y = matrix[1, 0] * point.X + matrix[1, 1] * point.Y + matrix[1, 2];
+            return new Point((int)x, (int)y);
+        }
+
+        public static void ApplyRotation(Shape shape, float angle, Point center)
+        {
+            float[,] matrix = CreateRotationMatrix(angle, center);
+
+            for (int i = 0; i < shape.Points.Count; i++)
+            {
+                shape.Points[i] = TransformPoint(shape.Points[i], matrix);
+            }
+
+            for (int i = 0; i < shape.ogPoints.Count; i++)
+            {
+                shape.ogPoints[i] = TransformPoint(shape.ogPoints[i], matrix);
+            }
+        }
+    }
 	
 }
