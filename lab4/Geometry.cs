@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Collections.Generic;
 
 namespace lab4
 {
@@ -74,6 +75,53 @@ namespace lab4
             var rect = Rectangle.FromLTRB(minX, minY, maxX, maxY);
             rect.Inflate(6, 6);
             return rect;
+        }
+
+        public static bool IsPointInPolygon(Point point, List<Point> polygon)
+        {
+            if (polygon == null || polygon.Count < 3)
+                return false;
+
+            bool inside = false;
+            int n = polygon.Count;
+
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                if (((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y)) &&
+                    (point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) /
+                     (polygon[j].Y - polygon[i].Y) + polygon[i].X))
+                {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+
+        public static bool IsConvexPolygon(List<Point> polygon)
+        {
+            if (polygon == null || polygon.Count < 3)
+                return true;
+
+            bool gotNegative = false;
+            bool gotPositive = false;
+            int n = polygon.Count;
+
+            for (int i = 0; i < n; i++)
+            {
+                Point a = polygon[i];
+                Point b = polygon[(i + 1) % n];
+                Point c = polygon[(i + 2) % n];
+
+                float crossProduct = (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+
+                if (crossProduct < 0) gotNegative = true;
+                else if (crossProduct > 0) gotPositive = true;
+
+                if (gotNegative && gotPositive) return false;
+            }
+
+            return true;
         }
     }
 }
