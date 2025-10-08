@@ -392,8 +392,6 @@ namespace lab4
                             drawingBox.Invalidate();
                             return;
                         }
-						MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
-								MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
                 }
                 else
@@ -403,8 +401,10 @@ namespace lab4
                     isIntersectionMode = false;
                     return;
 				}
-                
-                return;
+				MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
+						MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+				return;
             }
 
             secondEdge ??= new LineShape();
@@ -547,8 +547,6 @@ namespace lab4
                             drawingBox.Invalidate();
                             return;
                         }
-						MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
-								MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
                 }
 				else
@@ -558,8 +556,10 @@ namespace lab4
 					isIntersectionMode = false;
 					return;
 				}
-				
-                return;
+				MessageBox.Show("Кликните ближе к ребру выбранной фигуры.", "Ошибка",
+						MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+				return;
             }
             leftRightPoint = clickPoint;
             drawingBox.Invalidate();
@@ -596,11 +596,6 @@ namespace lab4
         private void buttonLeftRight_Click(object sender, EventArgs e)
         {
             StartLeftRightMode();
-        }
-
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-
         }
 
         private void buttonRotatePoint_Click(object sender, EventArgs e)

@@ -67,7 +67,7 @@
 			// buttonPoint
 			// 
 			buttonPoint.Location = new Point(4, 50);
-			buttonPoint.Margin = new Padding(4, 4, 4, 4);
+			buttonPoint.Margin = new Padding(4);
 			buttonPoint.Name = "buttonPoint";
 			buttonPoint.Size = new Size(371, 38);
 			buttonPoint.TabIndex = 0;
@@ -78,7 +78,7 @@
 			// 
 			drawingBox.BorderStyle = BorderStyle.FixedSingle;
 			drawingBox.Location = new Point(14, 15);
-			drawingBox.Margin = new Padding(4, 4, 4, 4);
+			drawingBox.Margin = new Padding(4);
 			drawingBox.Name = "drawingBox";
 			drawingBox.Size = new Size(1108, 756);
 			drawingBox.TabIndex = 1;
@@ -99,7 +99,7 @@
 			tableLayoutPanelMode.Controls.Add(buttonPoint, 0, 1);
 			tableLayoutPanelMode.Controls.Add(textBox1, 0, 0);
 			tableLayoutPanelMode.Location = new Point(1130, 15);
-			tableLayoutPanelMode.Margin = new Padding(4, 4, 4, 4);
+			tableLayoutPanelMode.Margin = new Padding(4);
 			tableLayoutPanelMode.Name = "tableLayoutPanelMode";
 			tableLayoutPanelMode.RowCount = 5;
 			tableLayoutPanelMode.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
@@ -115,7 +115,7 @@
 			// 
 			buttonFix.BackColor = SystemColors.ActiveCaption;
 			buttonFix.Location = new Point(4, 188);
-			buttonFix.Margin = new Padding(4, 4, 4, 4);
+			buttonFix.Margin = new Padding(4);
 			buttonFix.Name = "buttonFix";
 			buttonFix.Size = new Size(371, 39);
 			buttonFix.TabIndex = 4;
@@ -125,7 +125,7 @@
 			// buttonPolygon
 			// 
 			buttonPolygon.Location = new Point(4, 142);
-			buttonPolygon.Margin = new Padding(4, 4, 4, 4);
+			buttonPolygon.Margin = new Padding(4);
 			buttonPolygon.Name = "buttonPolygon";
 			buttonPolygon.Size = new Size(371, 38);
 			buttonPolygon.TabIndex = 2;
@@ -135,7 +135,7 @@
 			// buttonLine
 			// 
 			buttonLine.Location = new Point(4, 96);
-			buttonLine.Margin = new Padding(4, 4, 4, 4);
+			buttonLine.Margin = new Padding(4);
 			buttonLine.Name = "buttonLine";
 			buttonLine.Size = new Size(371, 38);
 			buttonLine.TabIndex = 1;
@@ -146,7 +146,7 @@
 			// 
 			textBox1.BackColor = SystemColors.Control;
 			textBox1.Location = new Point(4, 4);
-			textBox1.Margin = new Padding(4, 4, 4, 4);
+			textBox1.Margin = new Padding(4);
 			textBox1.Name = "textBox1";
 			textBox1.ReadOnly = true;
 			textBox1.Size = new Size(366, 31);
@@ -159,7 +159,7 @@
 			buttonClear.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 			buttonClear.BackColor = Color.RosyBrown;
 			buttonClear.Location = new Point(1130, 732);
-			buttonClear.Margin = new Padding(4, 4, 4, 4);
+			buttonClear.Margin = new Padding(4);
 			buttonClear.Name = "buttonClear";
 			buttonClear.Size = new Size(371, 39);
 			buttonClear.TabIndex = 3;
@@ -176,17 +176,16 @@
 			panel1.Controls.Add(textBox3);
 			panel1.Controls.Add(textBox2);
 			panel1.Location = new Point(1130, 260);
-			panel1.Margin = new Padding(4, 4, 4, 4);
+			panel1.Margin = new Padding(4);
 			panel1.Name = "panel1";
 			panel1.Size = new Size(371, 146);
 			panel1.TabIndex = 4;
-			panel1.Paint += panel1_Paint;
 			// 
 			// buttonTranslate
 			// 
 			buttonTranslate.BackColor = SystemColors.ActiveCaption;
 			buttonTranslate.Location = new Point(212, 55);
-			buttonTranslate.Margin = new Padding(4, 4, 4, 4);
+			buttonTranslate.Margin = new Padding(4);
 			buttonTranslate.Name = "buttonTranslate";
 			buttonTranslate.Size = new Size(154, 75);
 			buttonTranslate.TabIndex = 5;
@@ -196,7 +195,7 @@
 			// textBoxDy
 			// 
 			textBoxDy.Location = new Point(60, 96);
-			textBoxDy.Margin = new Padding(4, 4, 4, 4);
+			textBoxDy.Margin = new Padding(4);
 			textBoxDy.Name = "textBoxDy";
 			textBoxDy.Size = new Size(144, 31);
 			textBoxDy.TabIndex = 4;
@@ -204,7 +203,7 @@
 			// textBoxDx
 			// 
 			textBoxDx.Location = new Point(60, 55);
-			textBoxDx.Margin = new Padding(4, 4, 4, 4);
+			textBoxDx.Margin = new Padding(4);
 			textBoxDx.Name = "textBoxDx";
 			textBoxDx.Size = new Size(144, 31);
 			textBoxDx.TabIndex = 3;
@@ -212,7 +211,7 @@
 			// textBox4
 			// 
 			textBox4.Location = new Point(11, 96);
-			textBox4.Margin = new Padding(4, 4, 4, 4);
+			textBox4.Margin = new Padding(4);
 			textBox4.Name = "textBox4";
 			textBox4.ReadOnly = true;
 			textBox4.Size = new Size(40, 31);
@@ -222,7 +221,7 @@
 			// textBox3
 			// 
 			textBox3.Location = new Point(11, 55);
-			textBox3.Margin = new Padding(4, 4, 4, 4);
+			textBox3.Margin = new Padding(4);
 			textBox3.Name = "textBox3";
 			textBox3.ReadOnly = true;
 			textBox3.Size = new Size(40, 31);
@@ -233,7 +232,7 @@
 			// 
 			textBox2.BackColor = SystemColors.Control;
 			textBox2.Location = new Point(4, 4);
-			textBox2.Margin = new Padding(4, 4, 4, 4);
+			textBox2.Margin = new Padding(4);
 			textBox2.Name = "textBox2";
 			textBox2.ReadOnly = true;
 			textBox2.Size = new Size(363, 31);
@@ -253,7 +252,7 @@
 			// 
 			buttonIntersection.BackColor = SystemColors.ActiveCaption;
 			buttonIntersection.Location = new Point(1130, 412);
-			buttonIntersection.Margin = new Padding(4, 4, 4, 4);
+			buttonIntersection.Margin = new Padding(4);
 			buttonIntersection.Name = "buttonIntersection";
 			buttonIntersection.Size = new Size(371, 39);
 			buttonIntersection.TabIndex = 6;
@@ -264,7 +263,7 @@
 			// 
 			buttonScaling.BackColor = SystemColors.ActiveCaption;
 			buttonScaling.Location = new Point(1130, 459);
-			buttonScaling.Margin = new Padding(4, 4, 4, 4);
+			buttonScaling.Margin = new Padding(4);
 			buttonScaling.Name = "buttonScaling";
 			buttonScaling.Size = new Size(371, 39);
 			buttonScaling.TabIndex = 7;
@@ -276,7 +275,7 @@
 			// 
 			buttonScalingCenter.BackColor = SystemColors.ActiveCaption;
 			buttonScalingCenter.Location = new Point(1130, 504);
-			buttonScalingCenter.Margin = new Padding(4, 4, 4, 4);
+			buttonScalingCenter.Margin = new Padding(4);
 			buttonScalingCenter.Name = "buttonScalingCenter";
 			buttonScalingCenter.Size = new Size(371, 39);
 			buttonScalingCenter.TabIndex = 8;
@@ -288,7 +287,7 @@
 			// 
 			buttonLeftRight.BackColor = SystemColors.ActiveCaption;
 			buttonLeftRight.Location = new Point(1130, 549);
-			buttonLeftRight.Margin = new Padding(4, 4, 4, 4);
+			buttonLeftRight.Margin = new Padding(4);
 			buttonLeftRight.Name = "buttonLeftRight";
 			buttonLeftRight.Size = new Size(371, 39);
 			buttonLeftRight.TabIndex = 9;
@@ -324,7 +323,7 @@
 			// 
 			buttonOK.BackColor = SystemColors.ActiveBorder;
 			buttonOK.Location = new Point(212, 4);
-			buttonOK.Margin = new Padding(4, 4, 4, 4);
+			buttonOK.Margin = new Padding(4);
 			buttonOK.Name = "buttonOK";
 			buttonOK.Size = new Size(50, 40);
 			buttonOK.TabIndex = 6;
@@ -335,7 +334,7 @@
 			// textBoxScaling
 			// 
 			textBoxScaling.Location = new Point(139, 5);
-			textBoxScaling.Margin = new Padding(4, 4, 4, 4);
+			textBoxScaling.Margin = new Padding(4);
 			textBoxScaling.Name = "textBoxScaling";
 			textBoxScaling.Size = new Size(64, 31);
 			textBoxScaling.TabIndex = 6;
@@ -346,7 +345,7 @@
 			// 
 			buttonRotatePoint.BackColor = SystemColors.ActiveCaption;
 			buttonRotatePoint.Location = new Point(1130, 592);
-			buttonRotatePoint.Margin = new Padding(4, 4, 4, 4);
+			buttonRotatePoint.Margin = new Padding(4);
 			buttonRotatePoint.Name = "buttonRotatePoint";
 			buttonRotatePoint.Size = new Size(238, 46);
 			buttonRotatePoint.TabIndex = 12;
@@ -357,7 +356,7 @@
 			// 
 			buttonRotateCenter.BackColor = SystemColors.ActiveCaption;
 			buttonRotateCenter.Location = new Point(1130, 638);
-			buttonRotateCenter.Margin = new Padding(4, 4, 4, 4);
+			buttonRotateCenter.Margin = new Padding(4);
 			buttonRotateCenter.Name = "buttonRotateCenter";
 			buttonRotateCenter.Size = new Size(238, 44);
 			buttonRotateCenter.TabIndex = 13;
@@ -368,7 +367,7 @@
 			// 
 			buttonCheckPointInPolygon.BackColor = SystemColors.ActiveCaption;
 			buttonCheckPointInPolygon.Location = new Point(1130, 685);
-			buttonCheckPointInPolygon.Margin = new Padding(4, 4, 4, 4);
+			buttonCheckPointInPolygon.Margin = new Padding(4);
 			buttonCheckPointInPolygon.Name = "buttonCheckPointInPolygon";
 			buttonCheckPointInPolygon.Size = new Size(371, 39);
 			buttonCheckPointInPolygon.TabIndex = 14;
@@ -387,7 +386,7 @@
 			// textBoxRotationAngle
 			// 
 			textBoxRotationAngle.Location = new Point(1375, 638);
-			textBoxRotationAngle.Margin = new Padding(4, 4, 4, 4);
+			textBoxRotationAngle.Margin = new Padding(4);
 			textBoxRotationAngle.Name = "textBoxRotationAngle";
 			textBoxRotationAngle.Size = new Size(104, 31);
 			textBoxRotationAngle.TabIndex = 15;
@@ -424,7 +423,7 @@
 			Controls.Add(tableLayoutPanelMode);
 			Controls.Add(drawingBox);
 			Controls.Add(labelRotationAngle);
-			Margin = new Padding(4, 4, 4, 4);
+			Margin = new Padding(4);
 			Name = "MainForm";
 			Text = "Аффинные преобразования";
 			((System.ComponentModel.ISupportInitialize)drawingBox).EndInit();
