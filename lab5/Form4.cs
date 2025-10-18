@@ -149,14 +149,14 @@ namespace lab5
 
 			foreach (PointF p in points)
 			{
-				g.FillEllipse(Brushes.Black, p.X - 4, p.Y - 4, 8, 8);
+				g.FillEllipse(Brushes.Gray, p.X - 4, p.Y - 4, 8, 8);
 			}
 
 			if (points.Count > 1)
 			{
 				for (int i = 0; i < points.Count - 1; i++)
 				{
-					g.DrawLine(Pens.Black, points[i], points[i + 1]);
+					g.DrawLine(Pens.Gray, points[i], points[i + 1]);
 				}
 			}
 
