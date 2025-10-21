@@ -17,9 +17,11 @@ namespace lab5
         private double initialDirDeg = 90.0;
         private Dictionary<char, string> rules = [];
         private string currentString = "";
-        private List<(PointF a, PointF b)> segments = [];
+        private List<(PointF a, PointF b)> segments = new();
+        private List<(PointF a, PointF b, int depth)> treeSegments = new();
 
         private float baseStep = 10f;
+        private float userScale = 1.0f;
 
         public Form2()
         {
@@ -28,10 +30,19 @@ namespace lab5
             trackBarRandomAngle.Scroll += (s, e) => labelRandomAngle.Text = $"Разброс угла (°): {trackBarRandomAngle.Value}";
             trackBarRandomLen.Scroll += (s, e) => labelRandomLen.Text = $"Разброс длины (%): {trackBarRandomLen.Value}";
 
+            trackBarScale.Scroll += (s, e) =>
+            {
+                userScale = trackBarScale.Value / 100f;
+                labelScale.Text = $"Масштаб: {trackBarScale.Value}%";
+                canvas.Invalidate();
+            };
+
             ofd = new OpenFileDialog()
             {
                 Filter = "Text files|*.txt;*.ls;*.l;*.cfg|All files|*.*"
             };
+
+            canvas.Resize += (s, e) => canvas.Invalidate();
 
             rules.Clear();
             axiom = "F";
@@ -61,6 +72,10 @@ namespace lab5
 
         private void ButtonGenerate_Click(object sender, EventArgs e)
         {
+            canvas.Paint -= DrawTree;
+            canvas.Paint -= Canvas_Paint;
+            canvas.Paint += Canvas_Paint;
+
             int iter = (int)numericUpDownIter.Value;
             currentString = GenerateLSystem(axiom, rules, iter);
             InterpretToSegments(currentString);
@@ -221,7 +236,7 @@ namespace lab5
 
         private void InterpretToSegmentsTree(string commands)
         {
-            segments.Clear();
+            treeSegments.Clear();
 
             var stack = new Stack<(float x, float y, double angle, int depth)>();
 
@@ -294,42 +309,49 @@ namespace lab5
                 }
             }
 
-            segments.Clear();
-            segments.AddRange(lines.Select(l => (l.a, l.b)));
+            treeSegments.Clear();
+            treeSegments.AddRange(lines);
 
-            canvas.Paint += (s, e) =>
+            canvas.Paint -= Canvas_Paint;
+            canvas.Paint -= DrawTree;
+            canvas.Paint += DrawTree;
+        }
+
+        private void DrawTree(object sender, PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            e.Graphics.Clear(Color.White);
+
+            if (treeSegments.Count == 0) return;
+
+            var xs = treeSegments.SelectMany(s => new[] { s.a.X, s.b.X });
+            var ys = treeSegments.SelectMany(s => new[] { s.a.Y, s.b.Y });
+            float minX = xs.Min(), maxX = xs.Max(), minY = ys.Min(), maxY = ys.Max();
+            float w = maxX - minX, h = maxY - minY;
+            if (w == 0) w = 1; if (h == 0) h = 1;
+            float pad = 20;
+            float scale = Math.Min((canvas.Width - 2 * pad) / w, (canvas.Height - 2 * pad) / h) * userScale;
+            float offsetX = pad - minX * scale + (canvas.Width - 2 * pad - w * scale) / 2;
+            float offsetY = pad - minY * scale + (canvas.Height - 2 * pad - h * scale) / 2;
+
+            int maxDepth = treeSegments.Max(s => s.depth);
+            foreach (var seg in treeSegments)
             {
-                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                e.Graphics.Clear(Color.White);
+                float t = (float)seg.depth / maxDepth;
 
-                if (lines.Count == 0) return;
+                int r = (int)(139 + (0 - 139) * t);
+                int g = (int)(69 + (128 - 69) * t);
+                int b = (int)(19 + (0 - 19) * t);
 
-                var xs = lines.SelectMany(s => new[] { s.a.X, s.b.X });
-                var ys = lines.SelectMany(s => new[] { s.a.Y, s.b.Y });
-                float minX = xs.Min(), maxX = xs.Max(), minY = ys.Min(), maxY = ys.Max();
-                float w = maxX - minX, h = maxY - minY;
-                if (w == 0) w = 1; if (h == 0) h = 1;
-                float pad = 20;
-                float scale = Math.Min((canvas.Width - 2 * pad) / w, (canvas.Height - 2 * pad) / h);
-                float offsetX = pad - minX * scale + (canvas.Width - 2 * pad - w * scale) / 2;
-                float offsetY = pad - minY * scale + (canvas.Height - 2 * pad - h * scale) / 2;
+                float thickness = Math.Max(0.5f, 8f * (1f - t));
 
-                foreach (var seg in lines)
+                using (var pen = new Pen(Color.FromArgb(r, g, b), thickness))
                 {
-                    float t = maxDepth == 0 ? 0 : (float)seg.depth / maxDepth;
-                    int r = (int)(139 + (0 - 139) * t);
-                    int g = (int)(69 + (128 - 69) * t);
-                    int b = (int)(19 + (0 - 19) * t);
-                    float thickness = Math.Max(1f, 5f * (1f - t));
-
-                    using (var pen = new Pen(Color.FromArgb(r, g, b), thickness))
-                    {
-                        var a = new PointF(seg.a.X * scale + offsetX, seg.a.Y * scale + offsetY);
-                        var bpt = new PointF(seg.b.X * scale + offsetX, seg.b.Y * scale + offsetY);
-                        e.Graphics.DrawLine(pen, a, bpt);
-                    }
+                    var a = new PointF(seg.a.X * scale + offsetX, seg.a.Y * scale + offsetY);
+                    var bpt = new PointF(seg.b.X * scale + offsetX, seg.b.Y * scale + offsetY);
+                    e.Graphics.DrawLine(pen, a, bpt);
                 }
-            };
+            }
         }
 
         private void Canvas_Paint(object sender, PaintEventArgs e)
@@ -351,7 +373,7 @@ namespace lab5
             float pad = 20;
             float scaleX = (canvas.ClientSize.Width - 2 * pad) / w;
             float scaleY = (canvas.ClientSize.Height - 2 * pad) / h;
-            float scale = Math.Min(scaleX, scaleY);
+            float scale = Math.Min(scaleX, scaleY) * userScale;
 
             float offsetX = pad - minX * scale + (canvas.ClientSize.Width - 2 * pad - w * scale) / 2;
             float offsetY = pad - minY * scale + (canvas.ClientSize.Height - 2 * pad - h * scale) / 2;
