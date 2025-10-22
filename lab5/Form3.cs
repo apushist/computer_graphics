@@ -16,14 +16,14 @@ namespace lab5
 
         private Bitmap bmp;
         private Graphics g;
-        private List<Edge> originalEdges = new List<Edge>(); // Сохраняем оригинальные координаты
-        private List<Edge> displayEdges = new List<Edge>(); // Координаты для отображения
+        private List<Edge> originalEdges = new List<Edge>();
+        private List<Edge> displayEdges = new List<Edge>();
         private Random rnd = new Random();
         private double R;
         private const int MAX_STEPS = 10;
         private const double MIN_SEGMENT_LENGTH = 2.0;
         private int currentStep = 0;
-        private Size originalPictureBoxSize; // Запоминаем оригинальный размер
+        private Size originalPictureBoxSize;
 
         public Form3()
         {
@@ -37,7 +37,6 @@ namespace lab5
             this.autoGenerateBtn.Click += new System.EventHandler(this.AutoGenerate_Click);
             this.Resize += new System.EventHandler(this.Form3_Resize);
 
-            // Запоминаем оригинальный размер PictureBox
             originalPictureBoxSize = pictureBox1.Size;
 
             InitializeBitmap();
@@ -53,7 +52,6 @@ namespace lab5
 
         private void InitializeBitmap()
         {
-            // Освобождаем предыдущие ресурсы
             if (bmp != null)
             {
                 bmp.Dispose();
@@ -63,7 +61,6 @@ namespace lab5
                 g.Dispose();
             }
 
-            // Создаем новый bitmap с текущими размерами PictureBox
             bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             pictureBox1.Image = bmp;
             g = Graphics.FromImage(bmp);
@@ -73,7 +70,6 @@ namespace lab5
 
         private void Form3_Resize(object sender, EventArgs e)
         {
-            // Просто перерисовываем существующие ребра с новым масштабом
             RedrawOnResize();
         }
 
@@ -90,7 +86,6 @@ namespace lab5
                 InitializeBitmap();
             }
 
-            // Обновляем максимальные значения NumericUpDown
             initLLength.Maximum = pictureBox1.Height - 10;
             initRLength.Maximum = pictureBox1.Height - 10;
         }
@@ -155,7 +150,6 @@ namespace lab5
                 initRLength.Enabled = false;
                 initRoughness.Enabled = false;
 
-                // Запоминаем оригинальный размер
                 originalPictureBoxSize = pictureBox1.Size;
 
                 Edge first = new Edge(
@@ -163,7 +157,7 @@ namespace lab5
                     new PointF(pictureBox1.Width, pictureBox1.Height - (float)rLength));
 
                 originalEdges.Add(first);
-                displayEdges.Add(new Edge(first.left, first.right)); // Копируем для отображения
+                displayEdges.Add(new Edge(first.left, first.right)); 
                 currentStep = 1;
                 DrawEdges();
             }
@@ -188,7 +182,7 @@ namespace lab5
                                      (rnd.NextDouble() - 0.5) * R * length;
 
                     float minY = 10;
-                    float maxY = originalPictureBoxSize.Height - 10; // Используем оригинальную высоту
+                    float maxY = originalPictureBoxSize.Height - 10; 
                     newHeight = Math.Max(minY, Math.Min(maxY, newHeight));
 
                     PointF middle = new PointF(
@@ -208,7 +202,7 @@ namespace lab5
                 }
 
                 originalEdges = scattered;
-                ScaleEdgesToCurrentSize(); // Масштабируем новые ребра для отображения
+                ScaleEdgesToCurrentSize(); 
                 currentStep++;
                 DrawEdges();
             }
@@ -216,10 +210,8 @@ namespace lab5
 
         private void DrawEdges()
         {
-            // Очищаем изображение
             g.Clear(Color.White);
 
-            // Рисуем все ребра из displayEdges
             foreach (Edge edge in displayEdges)
             {
                 g.DrawLine(Pens.Black, edge.left, edge.right);
