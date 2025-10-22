@@ -16,12 +16,14 @@ namespace lab5
 
         private Bitmap bmp;
         private Graphics g;
-        private List<Edge> edges = new List<Edge>();
+        private List<Edge> originalEdges = new List<Edge>(); // Сохраняем оригинальные координаты
+        private List<Edge> displayEdges = new List<Edge>(); // Координаты для отображения
         private Random rnd = new Random();
         private double R;
         private const int MAX_STEPS = 10;
         private const double MIN_SEGMENT_LENGTH = 2.0;
         private int currentStep = 0;
+        private Size originalPictureBoxSize; // Запоминаем оригинальный размер
 
         public Form3()
         {
@@ -33,12 +35,12 @@ namespace lab5
             this.plusBtn.Click += new System.EventHandler(this.PlusBtn_Click);
             this.minusBtn.Click += new System.EventHandler(this.minusBtn_Click);
             this.autoGenerateBtn.Click += new System.EventHandler(this.AutoGenerate_Click);
+            this.Resize += new System.EventHandler(this.Form3_Resize);
 
-            bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Image = bmp;
-            g = Graphics.FromImage(bmp);
-            g.Clear(Color.White);
-            pictureBox1.Refresh();
+            // Запоминаем оригинальный размер PictureBox
+            originalPictureBoxSize = pictureBox1.Size;
+
+            InitializeBitmap();
 
             initLLength.Minimum = 10;
             initLLength.Maximum = pictureBox1.Height - 10;
@@ -47,6 +49,74 @@ namespace lab5
             initRLength.Minimum = 10;
             initRLength.Maximum = pictureBox1.Height - 10;
             initRLength.Value = pictureBox1.Height / 4;
+        }
+
+        private void InitializeBitmap()
+        {
+            // Освобождаем предыдущие ресурсы
+            if (bmp != null)
+            {
+                bmp.Dispose();
+            }
+            if (g != null)
+            {
+                g.Dispose();
+            }
+
+            // Создаем новый bitmap с текущими размерами PictureBox
+            bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            pictureBox1.Image = bmp;
+            g = Graphics.FromImage(bmp);
+            g.Clear(Color.White);
+            pictureBox1.Refresh();
+        }
+
+        private void Form3_Resize(object sender, EventArgs e)
+        {
+            // Просто перерисовываем существующие ребра с новым масштабом
+            RedrawOnResize();
+        }
+
+        private void RedrawOnResize()
+        {
+            if (originalEdges.Count > 0)
+            {
+                InitializeBitmap();
+                ScaleEdgesToCurrentSize();
+                DrawEdges();
+            }
+            else
+            {
+                InitializeBitmap();
+            }
+
+            // Обновляем максимальные значения NumericUpDown
+            initLLength.Maximum = pictureBox1.Height - 10;
+            initRLength.Maximum = pictureBox1.Height - 10;
+        }
+
+        private void ScaleEdgesToCurrentSize()
+        {
+            displayEdges.Clear();
+
+            if (originalPictureBoxSize.Width == 0 || originalPictureBoxSize.Height == 0)
+                return;
+
+            float scaleX = (float)pictureBox1.Width / originalPictureBoxSize.Width;
+            float scaleY = (float)pictureBox1.Height / originalPictureBoxSize.Height;
+
+            foreach (Edge originalEdge in originalEdges)
+            {
+                PointF scaledLeft = new PointF(
+                    originalEdge.left.X * scaleX,
+                    originalEdge.left.Y * scaleY);
+
+                PointF scaledRight = new PointF(
+                    originalEdge.right.X * scaleX,
+                    originalEdge.right.Y * scaleY);
+
+                displayEdges.Add(new Edge(scaledLeft, scaledRight));
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -63,7 +133,7 @@ namespace lab5
                 return;
             }
 
-            if (edges.Count == 0)
+            if (originalEdges.Count == 0)
             {
                 double lLength = (double)initLLength.Value;
                 double rLength = (double)initRLength.Value;
@@ -85,10 +155,15 @@ namespace lab5
                 initRLength.Enabled = false;
                 initRoughness.Enabled = false;
 
+                // Запоминаем оригинальный размер
+                originalPictureBoxSize = pictureBox1.Size;
+
                 Edge first = new Edge(
                     new PointF(0, pictureBox1.Height - (float)lLength),
                     new PointF(pictureBox1.Width, pictureBox1.Height - (float)rLength));
-                edges.Add(first);
+
+                originalEdges.Add(first);
+                displayEdges.Add(new Edge(first.left, first.right)); // Копируем для отображения
                 currentStep = 1;
                 DrawEdges();
             }
@@ -97,7 +172,7 @@ namespace lab5
                 List<Edge> scattered = new List<Edge>();
                 bool addedNewSegments = false;
 
-                foreach (Edge edge in edges)
+                foreach (Edge edge in originalEdges)
                 {
                     double length = Math.Sqrt(
                         Math.Pow(edge.right.X - edge.left.X, 2) +
@@ -113,7 +188,7 @@ namespace lab5
                                      (rnd.NextDouble() - 0.5) * R * length;
 
                     float minY = 10;
-                    float maxY = pictureBox1.Height - 10;
+                    float maxY = originalPictureBoxSize.Height - 10; // Используем оригинальную высоту
                     newHeight = Math.Max(minY, Math.Min(maxY, newHeight));
 
                     PointF middle = new PointF(
@@ -125,14 +200,15 @@ namespace lab5
                     addedNewSegments = true;
                 }
 
-                if (!addedNewSegments && scattered.Count == edges.Count)
+                if (!addedNewSegments && scattered.Count == originalEdges.Count)
                 {
                     MessageBox.Show("Достигнута максимальная детализация!", "Информация",
                                   MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                edges = scattered;
+                originalEdges = scattered;
+                ScaleEdgesToCurrentSize(); // Масштабируем новые ребра для отображения
                 currentStep++;
                 DrawEdges();
             }
@@ -140,16 +216,15 @@ namespace lab5
 
         private void DrawEdges()
         {
-            bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            g = Graphics.FromImage(bmp);
+            // Очищаем изображение
             g.Clear(Color.White);
 
-            foreach (Edge edge in edges)
+            // Рисуем все ребра из displayEdges
+            foreach (Edge edge in displayEdges)
             {
                 g.DrawLine(Pens.Black, edge.left, edge.right);
             }
 
-            pictureBox1.Image = bmp;
             pictureBox1.Refresh();
         }
 
@@ -159,12 +234,9 @@ namespace lab5
             initLLength.Enabled = true;
             initRLength.Enabled = true;
             initRoughness.Enabled = true;
-            edges = new List<Edge>();
-            bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Image = bmp;
-            g = Graphics.FromImage(bmp);
-            g.Clear(Color.White);
-            pictureBox1.Refresh();
+            originalEdges = new List<Edge>();
+            displayEdges = new List<Edge>();
+            InitializeBitmap();
             R = 0;
         }
 
@@ -202,6 +274,23 @@ namespace lab5
                 Application.DoEvents();
                 System.Threading.Thread.Sleep(200);
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            if (bmp != null)
+            {
+                bmp.Dispose();
+            }
+            if (g != null)
+            {
+                g.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
