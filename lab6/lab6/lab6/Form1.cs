@@ -1,231 +1,382 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace lab6
 {
-    public partial class Form1 : Form
-    {
-        private Camera camera = new Camera();
-        private Viewport viewport = new Viewport();
-        private List<Point3D> points = new List<Point3D>();
-        private bool isPanning = false;
-        private Point lastMousePosition;
-        private Button btnResetRotation;
+	public partial class Form1 : Form
+	{
+		private Camera camera = new Camera();
+		private Viewport viewport = new Viewport();
+		private List<Point3D> points = new List<Point3D>();
+		private bool isRotatingCamera = false; // для вращения камеры (ПКМ)
+		private bool isRotatingObject = false; // для вращения объекта (ЛКМ)
+		private Point lastMousePosition;
+		private Button btnResetRotation;
+		private List<Polyhedron> polyhedrons = new List<Polyhedron>();
+		private Polyhedron currentPolyhedron;
+		private Matrix4x4 objectRotation = new Matrix4x4(); // матрица вращения объекта
+		private string chosenOption = "XY";
+		private double dx = 1;
+		private double dy = 1;	
+		private double dz = 1;
 
-        
+		public Form1()
+		{
+			InitializeComponent();
+			InitializePoints();
+		}
 
-        public Form1()
-        {
-            InitializeComponent();
-            InitializeTestPoints();
-        }
+		private void InitializePoints()
+		{
+			points.Clear();
+			polyhedrons.Clear();
 
-        private void InitializeTestPoints()
-        {
-            points.Clear();
+			// Создаем все многогранники
+			polyhedrons.Add(Polyhedron.CreateTetrahedron());
+			polyhedrons.Add(Polyhedron.CreateHexahedron());
+			polyhedrons.Add(Polyhedron.CreateOctahedron());
+			polyhedrons.Add(Polyhedron.CreateIcosahedron());
+			polyhedrons.Add(Polyhedron.CreateDodecaedr());
 
-            double size = 1.0;
+			currentPolyhedron = polyhedrons[0]; // Начинаем с тетраэдра
 
-            points.Add(new Point3D(0, size, 0));               
-            points.Add(new Point3D(size, -size / 2, 0));           
-            points.Add(new Point3D(-size, -size / 2, 0)); 
-            points.Add(new Point3D(0, -size / 2, size));
+		}
 
-            btnResetRotation = new Button();
-            btnResetRotation.Text = "Сброс вращ";
-            btnResetRotation.Size = new Size(80, 30);
-            btnResetRotation.Location = new Point(255, 10);
-            btnResetRotation.Click += btnResetRotation_Click;
-            this.Controls.Add(btnResetRotation);
+		private void btnResetRotation_Click(object sender, EventArgs e)
+		{
+			camera.RotateX = 30.0;
+			camera.RotateY = 45.0;
 
-        }
+			// Сбрасываем вращение объекта
+			if (currentPolyhedron != null)
+			{
+				// Восстанавливаем исходное состояние многогранника
+				ResetCurrentPolyhedron();
+			}
 
-        private void btnResetRotation_Click(object sender, EventArgs e)
-        {
-            camera.RotateX = 30.0;
-            camera.RotateY = 45.0;
-            pictureBox1.Invalidate();
-        }
+			pictureBox1.Invalidate();
+		}
 
-        private void PictureBox1_Paint(object sender, PaintEventArgs e)
-        {
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.Clear(Color.White);
+		private void PictureBox1_Paint(object sender, PaintEventArgs e)
+		{
+			e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+			e.Graphics.Clear(Color.White);
 
-            DrawCoordinateAxes(e.Graphics);
-            DrawTetrahedron(e.Graphics);
-            DrawInfo(e.Graphics);
-        }
+			DrawCoordinateAxes(e.Graphics);
+			if (currentPolyhedron != null)
+			{
 
-        private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
-        {
-            using (Pen pen = new Pen(color, 2))
-            {
-                g.DrawLine(pen, start, end);
-            }
+				DrawPolyherdon(e.Graphics, pictureBox1.Width, pictureBox1.Height);
+			}
 
-            float dx = end.X - start.X;
-            float dy = end.Y - start.Y;
-            float length = (float)Math.Sqrt(dx * dx + dy * dy);
+			DrawInfo(e.Graphics);
+		}
 
-            if (length > 0)
-            {
-                dx /= length;
-                dy /= length;
+		public void DrawPolyherdon(Graphics g, int screenWidth, int screenHeight)
+		{
+			if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
 
-                float arrowSize = 10f;
+			using (Pen pen = new Pen(Color.Black, 2))
+			{
+				foreach (var face in currentPolyhedron.Faces)
+				{
+					if (face.Count < 2) continue;
 
-                float angle = (float)(Math.PI / 6);
+					var points = new PointF[face.Count];
+					for (int i = 0; i < face.Count; i++)
+					{
+						var vertex = currentPolyhedron.Vertices[face[i]];
+						points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+					}
 
-                float leftX = end.X - arrowSize * (float)Math.Cos(angle) * dx + arrowSize * (float)Math.Sin(angle) * dy;
-                float leftY = end.Y - arrowSize * (float)Math.Cos(angle) * dy - arrowSize * (float)Math.Sin(angle) * dx;
+					// Рисуем контур грани
+					g.DrawPolygon(pen, points);
+				}
+			}
 
-                float rightX = end.X - arrowSize * (float)Math.Cos(angle) * dx - arrowSize * (float)Math.Sin(angle) * dy;
-                float rightY = end.Y - arrowSize * (float)Math.Cos(angle) * dy + arrowSize * (float)Math.Sin(angle) * dx;
-
-                using (Pen arrowPen = new Pen(color, 2))
-                {
-                    g.DrawLine(arrowPen, end, new PointF(leftX, leftY));
-                    g.DrawLine(arrowPen, end, new PointF(rightX, rightY));
-                }
-            }
-        }
-
-
-        private void DrawCoordinateAxes(Graphics g)
-        {
-            Point3D origin = new Point3D(0, 0, 0);
-            Point3D xAxis = new Point3D(3, 0, 0); 
-            Point3D yAxis = new Point3D(0, 3, 0);
-            Point3D zAxis = new Point3D(0, 0, 3);
-
-            System.Drawing.PointF originScreen = viewport.WorldToScreen(origin, camera, pictureBox1.Width, pictureBox1.Height);
-            System.Drawing.PointF xScreen = viewport.WorldToScreen(xAxis, camera, pictureBox1.Width, pictureBox1.Height);
-            System.Drawing.PointF yScreen = viewport.WorldToScreen(yAxis, camera, pictureBox1.Width, pictureBox1.Height);
-            System.Drawing.PointF zScreen = viewport.WorldToScreen(zAxis, camera, pictureBox1.Width, pictureBox1.Height);
-
-            DrawArrow(g, originScreen, xScreen, Color.Red);
-            DrawArrow(g, originScreen, yScreen, Color.Green);
-            DrawArrow(g, originScreen, zScreen, Color.Blue);
-
-            g.DrawString("X", this.Font, Brushes.Red, xScreen.X + 5, xScreen.Y + 5);
-            g.DrawString("Y", this.Font, Brushes.Green, yScreen.X + 5, yScreen.Y + 5);
-            g.DrawString("Z", this.Font, Brushes.Blue, zScreen.X + 5, zScreen.Y + 5);
-        }
+			// Рисуем вершины
+			foreach (var vertex in currentPolyhedron.Vertices)
+			{
+				var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+				g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
+			}
+		}
 
 
 
-        private void DrawTetrahedron(Graphics g)
-        {
-            if (points.Count < 4) return;
+		private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
+		{
+			using (Pen pen = new Pen(color, 2))
+			{
+				g.DrawLine(pen, start, end);
+			}
 
-            System.Drawing.PointF[] screenPoints = new System.Drawing.PointF[4];
-            for (int i = 0; i < 4; i++)
-            {
-                screenPoints[i] = viewport.WorldToScreen(points[i], camera, pictureBox1.Width, pictureBox1.Height);
-            }
+			float dx = end.X - start.X;
+			float dy = end.Y - start.Y;
+			float length = (float)Math.Sqrt(dx * dx + dy * dy);
 
-            using (Pen blackPen = new Pen(Color.Black, 2))
-            {
-                g.DrawLine(blackPen, screenPoints[1], screenPoints[2]);
-                g.DrawLine(blackPen, screenPoints[2], screenPoints[3]);
-                g.DrawLine(blackPen, screenPoints[3], screenPoints[1]);
+			if (length > 0)
+			{
+				dx /= length;
+				dy /= length;
 
-                g.DrawLine(blackPen, screenPoints[0], screenPoints[1]);
-                g.DrawLine(blackPen, screenPoints[0], screenPoints[2]);
-                g.DrawLine(blackPen, screenPoints[0], screenPoints[3]);
-            }
+				float arrowSize = 10f;
 
-            for (int i = 0; i < 4; i++)
-            {
-                g.FillEllipse(Brushes.Black, screenPoints[i].X - 4, screenPoints[i].Y - 4, 8, 8);
-            }
-        }
+				float angle = (float)(Math.PI / 6);
 
-        private void DrawInfo(Graphics g)
-        {
-            string projection = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-                ? "Аксонометрическая"
-                : "Перспективная";
+				float leftX = end.X - arrowSize * (float)Math.Cos(angle) * dx + arrowSize * (float)Math.Sin(angle) * dy;
+				float leftY = end.Y - arrowSize * (float)Math.Cos(angle) * dy - arrowSize * (float)Math.Sin(angle) * dx;
 
-            string info = $"Проекция: {projection} | Масштаб: {viewport.Scale:F2}x";
+				float rightX = end.X - arrowSize * (float)Math.Cos(angle) * dx - arrowSize * (float)Math.Sin(angle) * dy;
+				float rightY = end.Y - arrowSize * (float)Math.Cos(angle) * dy + arrowSize * (float)Math.Sin(angle) * dx;
 
-            g.DrawString(info, this.Font, Brushes.Black, 10, pictureBox1.Height - 30);
-        }
+				using (Pen arrowPen = new Pen(color, 2))
+				{
+					g.DrawLine(arrowPen, end, new PointF(leftX, leftY));
+					g.DrawLine(arrowPen, end, new PointF(rightX, rightY));
+				}
+			}
+		}
 
-        private void PictureBox1_MouseWheel(object sender, MouseEventArgs e)
-        {
-            float zoomFactor = e.Delta > 0 ? 1.1f : 0.9f;
-            viewport.Zoom(zoomFactor, new System.Drawing.PointF(e.X, e.Y), pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Invalidate();
-        }
 
-        private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                isPanning = true;
-                lastMousePosition = e.Location;
-                pictureBox1.Cursor = Cursors.SizeAll;
-            }
-        }
+		private void DrawCoordinateAxes(Graphics g)
+		{
+			Point3D origin = new Point3D(0, 0, 0);
+			Point3D xAxis = new Point3D(3, 0, 0);
+			Point3D yAxis = new Point3D(0, 3, 0);
+			Point3D zAxis = new Point3D(0, 0, 3);
 
-        private void PictureBox1_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (isPanning)
-            {
-                float deltaX = e.X - lastMousePosition.X;
-                float deltaY = e.Y - lastMousePosition.Y;
+			PointF originScreen = viewport.WorldToScreen(origin, camera, pictureBox1.Width, pictureBox1.Height);
+			PointF xScreen = viewport.WorldToScreen(xAxis, camera, pictureBox1.Width, pictureBox1.Height);
+			PointF yScreen = viewport.WorldToScreen(yAxis, camera, pictureBox1.Width, pictureBox1.Height);
+			PointF zScreen = viewport.WorldToScreen(zAxis, camera, pictureBox1.Width, pictureBox1.Height);
 
-                camera.Rotate(deltaX, deltaY);
+			DrawArrow(g, originScreen, xScreen, Color.Red);
+			DrawArrow(g, originScreen, yScreen, Color.Green);
+			DrawArrow(g, originScreen, zScreen, Color.Blue);
 
-                lastMousePosition = e.Location;
-                pictureBox1.Invalidate();
-            }
-        }
+			g.DrawString("X", this.Font, Brushes.Red, xScreen.X + 5, xScreen.Y + 5);
+			g.DrawString("Y", this.Font, Brushes.Green, yScreen.X + 5, yScreen.Y + 5);
+			g.DrawString("Z", this.Font, Brushes.Blue, zScreen.X + 5, zScreen.Y + 5);
+		}
 
-        private void PictureBox1_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                isPanning = false;
-                pictureBox1.Cursor = Cursors.Default;
-            }
-        }
+		private void DrawInfo(Graphics g)
+		{
+			string projection = camera.CurrentProjection == Camera.ProjectionType.Axonometric
+				? "Аксонометрическая"
+				: "Перспективная";
 
-        private void btnZoomIn_Click(object sender, EventArgs e)
-        {
-            viewport.Zoom(1.2f, new System.Drawing.PointF(pictureBox1.Width / 2, pictureBox1.Height / 2),
-                pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Invalidate();
-        }
+			string info = $"Проекция: {projection} | Масштаб: {viewport.Scale:F2}x";
 
-        private void btnZoomOut_Click(object sender, EventArgs e)
-        {
-            viewport.Zoom(0.8f, new System.Drawing.PointF(pictureBox1.Width / 2, pictureBox1.Height / 2),
-                pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Invalidate();
-        }
+			g.DrawString(info, Font, Brushes.Black, 10, pictureBox1.Height - 30);
+		}
 
-        private void btnResetView_Click(object sender, EventArgs e)
-        {
-            viewport.Reset();
-            pictureBox1.Invalidate();
-        }
+		private void PictureBox1_MouseWheel(object sender, MouseEventArgs e)
+		{
+			float zoomFactor = e.Delta > 0 ? 1.1f : 0.9f;
+			viewport.Zoom(zoomFactor, new System.Drawing.PointF(e.X, e.Y), pictureBox1.Width, pictureBox1.Height);
+			pictureBox1.Invalidate();
+		}
 
-        private void btnSwitchProjection_Click(object sender, EventArgs e)
-        {
-            camera.CurrentProjection = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-                ? Camera.ProjectionType.Perspective
-                : Camera.ProjectionType.Axonometric;
+		private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Right)
+			{
+				isRotatingCamera = true;
+				lastMousePosition = e.Location;
+				pictureBox1.Cursor = Cursors.SizeAll;
+			}
+			else if (e.Button == MouseButtons.Left)
+			{
+				isRotatingObject = true;
+				lastMousePosition = e.Location;
+				pictureBox1.Cursor = Cursors.Hand;
+			}
+		}
 
-            btnSwitchProjection.Text = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-                ? "Аксонометрия"
-                : "Перспектива";
+		private void PictureBox1_MouseMove(object sender, MouseEventArgs e)
+		{
+			if (isRotatingCamera)
+			{
+				float deltaX = e.X - lastMousePosition.X;
+				float deltaY = e.Y - lastMousePosition.Y;
 
-            pictureBox1.Invalidate();
-        }
-    }
+				camera.Rotate(deltaX, deltaY);
+
+				lastMousePosition = e.Location;
+				pictureBox1.Invalidate();
+			}
+			else if (isRotatingObject)
+			{
+				float deltaX = e.X - lastMousePosition.X;
+				float deltaY = e.Y - lastMousePosition.Y;
+
+				// Вращаем объект вокруг его центра
+				RotateObject(deltaX, deltaY);
+
+				lastMousePosition = e.Location;
+				pictureBox1.Invalidate();
+			}
+		}
+
+		private void PictureBox1_MouseUp(object sender, MouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Right)
+			{
+				isRotatingCamera = false;
+				pictureBox1.Cursor = Cursors.Default;
+			}
+			else if (e.Button == MouseButtons.Left)
+			{
+				isRotatingObject = false;
+				pictureBox1.Cursor = Cursors.Default;
+			}
+		}
+
+		private void RotateObject(double deltaX, double deltaY)
+		{
+			if (currentPolyhedron == null) return;
+
+			Point3D center = currentPolyhedron.GetCenter();
+
+			// Создаем матрицы вращения вокруг центра объекта
+			Matrix4x4 toOrigin = Matrix4x4.CreateTranslation(-center.X, -center.Y, -center.Z);
+			Matrix4x4 fromOrigin = Matrix4x4.CreateTranslation(center.X, center.Y, center.Z);
+
+			Matrix4x4 rotY = Matrix4x4.CreateRotationY(deltaX * 0.01);
+			Matrix4x4 rotX = Matrix4x4.CreateRotationX(deltaY * 0.01);
+
+			// Комбинируем преобразования
+			Matrix4x4 rotation = fromOrigin * rotX * rotY * toOrigin;
+
+			// Применяем вращение к объекту
+			currentPolyhedron.Transform(rotation);
+
+			// Обновляем общую матрицу вращения объекта
+			objectRotation = rotation * objectRotation;
+		}
+
+		private void ResetCurrentPolyhedron()
+		{
+			if (currentPolyhedron == null) return;
+
+			// Находим индекс текущего многогранника
+			int index = polyhedrons.IndexOf(currentPolyhedron);
+			if (index >= 0)
+			{
+				// Заменяем текущий многогранник на новый (без вращения)
+				switch (index)
+				{
+					case 0: currentPolyhedron = Polyhedron.CreateTetrahedron(); break;
+					case 1: currentPolyhedron = Polyhedron.CreateHexahedron(); break;
+					case 2: currentPolyhedron = Polyhedron.CreateOctahedron(); break;
+					case 3: currentPolyhedron = Polyhedron.CreateIcosahedron(); break;
+					case 4: currentPolyhedron = Polyhedron.CreateDodecaedr(); break;
+				}
+				polyhedrons[index] = currentPolyhedron;
+			}
+
+			objectRotation.MakeIdentity(); // сбрасываем матрицу вращения
+		}
+
+		private void btnZoomIn_Click(object sender, EventArgs e)
+		{
+			viewport.Zoom(1.2f, new PointF(pictureBox1.Width / 2, pictureBox1.Height / 2),
+				pictureBox1.Width, pictureBox1.Height);
+			pictureBox1.Invalidate();
+		}
+
+		private void btnZoomOut_Click(object sender, EventArgs e)
+		{
+			viewport.Zoom(0.8f, new PointF(pictureBox1.Width / 2, pictureBox1.Height / 2),
+				pictureBox1.Width, pictureBox1.Height);
+			pictureBox1.Invalidate();
+		}
+
+		private void btnResetView_Click(object sender, EventArgs e)
+		{
+			viewport.Reset();
+			InitializePoints();
+			pictureBox1.Invalidate();
+		}
+
+		private void btnSwitchProjection_Click(object sender, EventArgs e)
+		{
+			camera.CurrentProjection = camera.CurrentProjection == Camera.ProjectionType.Axonometric
+				? Camera.ProjectionType.Perspective
+				: Camera.ProjectionType.Axonometric;
+
+			btnSwitchProjection.Text = camera.CurrentProjection == Camera.ProjectionType.Axonometric
+				? "Аксонометрия"
+				: "Перспектива";
+
+			pictureBox1.Invalidate();
+		}
+
+		
+
+		private void buttonOct_Click(object sender, EventArgs e)
+		{
+			currentPolyhedron = polyhedrons[2];
+			objectRotation.MakeIdentity();
+			pictureBox1.Invalidate();
+
+		}
+
+		private void buttonTetr_Click(object sender, EventArgs e)
+		{
+			currentPolyhedron = polyhedrons[0];
+			objectRotation.MakeIdentity();
+			pictureBox1.Invalidate();
+
+		}
+
+		private void buttonGex_Click(object sender, EventArgs e)
+		{
+			currentPolyhedron = polyhedrons[1];
+			objectRotation.MakeIdentity();
+			pictureBox1.Invalidate();
+		}
+
+		private void buttonIco_Click(object sender, EventArgs e)
+		{
+			currentPolyhedron = polyhedrons[3];
+			objectRotation.MakeIdentity();
+			pictureBox1.Invalidate();
+		}
+
+		private void buttonDod_Click(object sender, EventArgs e)
+		{
+			currentPolyhedron = polyhedrons[4];
+			objectRotation.MakeIdentity();
+			pictureBox1.Invalidate();
+		}
+
+		//метод отражения
+		private void buttonRefl_Click(object sender, EventArgs e)
+		{
+			if (currentPolyhedron == null) return;
+
+			//todo нужно сделать listbox с опциями XY, XZ, or YZ и при их смене значение chosenOption должно
+			//меняться на их значение
+
+			var matrix = Matrix4x4.CreateReflection(chosenOption);
+			currentPolyhedron.Transform(matrix);
+			pictureBox1.Invalidate();
+		}
+
+		//метод смещения
+		private void buttonTrans_Click(object sender, EventArgs e)
+		{
+			if (currentPolyhedron == null) return;
+			//текстбоксы как раньше на смещение, при их изменении перезаписывать dx, dy,dz соответственно
+			var matrix = Matrix4x4.CreateTranslation(dx,dy,dz);
+			currentPolyhedron.Transform(matrix);
+			pictureBox1.Invalidate();
+		}
+
+	}
 }
