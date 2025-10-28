@@ -18,7 +18,10 @@ namespace lab6
 		private List<Polyhedron> polyhedrons = new List<Polyhedron>();
 		private Polyhedron currentPolyhedron;
 		private Matrix4x4 objectRotation = new Matrix4x4(); // матрица вращения объекта
-
+		private string chosenOption = "XY";
+		private double dx = 1;
+		private double dy = 1;	
+		private double dz = 1;
 
 		public Form1()
 		{
@@ -313,14 +316,7 @@ namespace lab6
 			pictureBox1.Invalidate();
 		}
 
-		private void buttonTrans_Click(object sender, EventArgs e)
-		{
-			if (currentPolyhedron == null) return;
-
-			var matrix = Matrix4x4.CreateTranslation(0.5, 0.3, 0.2);
-			currentPolyhedron.Transform(matrix);
-			pictureBox1.Invalidate();
-		}
+		
 
 		private void buttonOct_Click(object sender, EventArgs e)
 		{
@@ -359,13 +355,28 @@ namespace lab6
 			pictureBox1.Invalidate();
 		}
 
+		//метод отражения
 		private void buttonRefl_Click(object sender, EventArgs e)
 		{
 			if (currentPolyhedron == null) return;
 
-			var matrix = Matrix4x4.CreateReflection("XY");
+			//todo нужно сделать listbox с опциями XY, XZ, or YZ и при их смене значение chosenOption должно
+			//меняться на их значение
+
+			var matrix = Matrix4x4.CreateReflection(chosenOption);
 			currentPolyhedron.Transform(matrix);
 			pictureBox1.Invalidate();
 		}
+
+		//метод смещения
+		private void buttonTrans_Click(object sender, EventArgs e)
+		{
+			if (currentPolyhedron == null) return;
+			//текстбоксы как раньше на смещение, при их изменении перезаписывать dx, dy,dz соответственно
+			var matrix = Matrix4x4.CreateTranslation(dx,dy,dz);
+			currentPolyhedron.Transform(matrix);
+			pictureBox1.Invalidate();
+		}
+
 	}
 }

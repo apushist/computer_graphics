@@ -41,6 +41,11 @@
 			buttonIco = new Button();
 			buttonDod = new Button();
 			buttonRefl = new Button();
+			reflOptionsBox = new ListBox();
+			textBox1 = new TextBox();
+			textBox2 = new TextBox();
+			textBoxX = new TextBox();
+			textBoxY = new TextBox();
 			((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
 			SuspendLayout();
 			// 
@@ -49,9 +54,9 @@
 			pictureBox1.BackColor = Color.White;
 			pictureBox1.Dock = DockStyle.Fill;
 			pictureBox1.Location = new Point(0, 0);
-			pictureBox1.Margin = new Padding(4, 3, 4, 3);
+			pictureBox1.Margin = new Padding(6, 5, 6, 5);
 			pictureBox1.Name = "pictureBox1";
-			pictureBox1.Size = new Size(915, 647);
+			pictureBox1.Size = new Size(1307, 1078);
 			pictureBox1.TabIndex = 0;
 			pictureBox1.TabStop = false;
 			pictureBox1.Paint += PictureBox1_Paint;
@@ -62,10 +67,10 @@
 			// 
 			// btnZoomIn
 			// 
-			btnZoomIn.Location = new Point(14, 14);
-			btnZoomIn.Margin = new Padding(4, 3, 4, 3);
+			btnZoomIn.Location = new Point(20, 23);
+			btnZoomIn.Margin = new Padding(6, 5, 6, 5);
 			btnZoomIn.Name = "btnZoomIn";
-			btnZoomIn.Size = new Size(35, 35);
+			btnZoomIn.Size = new Size(50, 58);
 			btnZoomIn.TabIndex = 1;
 			btnZoomIn.Text = "+";
 			btnZoomIn.UseVisualStyleBackColor = true;
@@ -73,10 +78,10 @@
 			// 
 			// btnZoomOut
 			// 
-			btnZoomOut.Location = new Point(56, 14);
-			btnZoomOut.Margin = new Padding(4, 3, 4, 3);
+			btnZoomOut.Location = new Point(80, 23);
+			btnZoomOut.Margin = new Padding(6, 5, 6, 5);
 			btnZoomOut.Name = "btnZoomOut";
-			btnZoomOut.Size = new Size(35, 35);
+			btnZoomOut.Size = new Size(50, 58);
 			btnZoomOut.TabIndex = 2;
 			btnZoomOut.Text = "-";
 			btnZoomOut.UseVisualStyleBackColor = true;
@@ -84,10 +89,10 @@
 			// 
 			// btnResetView
 			// 
-			btnResetView.Location = new Point(98, 14);
-			btnResetView.Margin = new Padding(4, 3, 4, 3);
+			btnResetView.Location = new Point(140, 23);
+			btnResetView.Margin = new Padding(6, 5, 6, 5);
 			btnResetView.Name = "btnResetView";
-			btnResetView.Size = new Size(70, 35);
+			btnResetView.Size = new Size(100, 58);
 			btnResetView.TabIndex = 3;
 			btnResetView.Text = "Сброс";
 			btnResetView.UseVisualStyleBackColor = true;
@@ -95,10 +100,10 @@
 			// 
 			// btnSwitchProjection
 			// 
-			btnSwitchProjection.Location = new Point(175, 14);
-			btnSwitchProjection.Margin = new Padding(4, 3, 4, 3);
+			btnSwitchProjection.Location = new Point(250, 23);
+			btnSwitchProjection.Margin = new Padding(6, 5, 6, 5);
 			btnSwitchProjection.Name = "btnSwitchProjection";
-			btnSwitchProjection.Size = new Size(117, 35);
+			btnSwitchProjection.Size = new Size(167, 58);
 			btnSwitchProjection.TabIndex = 4;
 			btnSwitchProjection.Text = "Аксонометрия";
 			btnSwitchProjection.UseVisualStyleBackColor = true;
@@ -116,10 +121,10 @@
 			// 
 			// buttonTrans
 			// 
-			buttonTrans.Location = new Point(300, 14);
-			buttonTrans.Margin = new Padding(4, 3, 4, 3);
+			buttonTrans.Location = new Point(429, 23);
+			buttonTrans.Margin = new Padding(6, 5, 6, 5);
 			buttonTrans.Name = "buttonTrans";
-			buttonTrans.Size = new Size(70, 35);
+			buttonTrans.Size = new Size(100, 58);
 			buttonTrans.TabIndex = 5;
 			buttonTrans.Text = "Сместить";
 			buttonTrans.UseVisualStyleBackColor = true;
@@ -127,10 +132,10 @@
 			// 
 			// buttonTetr
 			// 
-			buttonTetr.Location = new Point(13, 55);
-			buttonTetr.Margin = new Padding(4, 3, 4, 3);
+			buttonTetr.Location = new Point(19, 92);
+			buttonTetr.Margin = new Padding(6, 5, 6, 5);
 			buttonTetr.Name = "buttonTetr";
-			buttonTetr.Size = new Size(78, 26);
+			buttonTetr.Size = new Size(111, 43);
 			buttonTetr.TabIndex = 6;
 			buttonTetr.Text = "Тетраэдр";
 			buttonTetr.UseVisualStyleBackColor = true;
@@ -138,10 +143,10 @@
 			// 
 			// buttonGex
 			// 
-			buttonGex.Location = new Point(13, 87);
-			buttonGex.Margin = new Padding(4, 3, 4, 3);
+			buttonGex.Location = new Point(19, 145);
+			buttonGex.Margin = new Padding(6, 5, 6, 5);
 			buttonGex.Name = "buttonGex";
-			buttonGex.Size = new Size(78, 26);
+			buttonGex.Size = new Size(111, 43);
 			buttonGex.TabIndex = 7;
 			buttonGex.Text = "Гексаэдр";
 			buttonGex.UseVisualStyleBackColor = true;
@@ -149,10 +154,10 @@
 			// 
 			// buttonOct
 			// 
-			buttonOct.Location = new Point(13, 119);
-			buttonOct.Margin = new Padding(4, 3, 4, 3);
+			buttonOct.Location = new Point(19, 198);
+			buttonOct.Margin = new Padding(6, 5, 6, 5);
 			buttonOct.Name = "buttonOct";
-			buttonOct.Size = new Size(78, 26);
+			buttonOct.Size = new Size(111, 43);
 			buttonOct.TabIndex = 8;
 			buttonOct.Text = "Октаэдр";
 			buttonOct.UseVisualStyleBackColor = true;
@@ -160,10 +165,10 @@
 			// 
 			// buttonIco
 			// 
-			buttonIco.Location = new Point(14, 151);
-			buttonIco.Margin = new Padding(4, 3, 4, 3);
+			buttonIco.Location = new Point(20, 252);
+			buttonIco.Margin = new Padding(6, 5, 6, 5);
 			buttonIco.Name = "buttonIco";
-			buttonIco.Size = new Size(78, 26);
+			buttonIco.Size = new Size(111, 43);
 			buttonIco.TabIndex = 9;
 			buttonIco.Text = "Икосаэдр";
 			buttonIco.UseVisualStyleBackColor = true;
@@ -171,10 +176,10 @@
 			// 
 			// buttonDod
 			// 
-			buttonDod.Location = new Point(14, 183);
-			buttonDod.Margin = new Padding(4, 3, 4, 3);
+			buttonDod.Location = new Point(20, 305);
+			buttonDod.Margin = new Padding(6, 5, 6, 5);
 			buttonDod.Name = "buttonDod";
-			buttonDod.Size = new Size(78, 26);
+			buttonDod.Size = new Size(111, 43);
 			buttonDod.TabIndex = 10;
 			buttonDod.Text = "Додекаэдр";
 			buttonDod.UseVisualStyleBackColor = true;
@@ -182,10 +187,10 @@
 			// 
 			// buttonRefl
 			// 
-			buttonRefl.Location = new Point(451, 14);
-			buttonRefl.Margin = new Padding(4, 3, 4, 3);
+			buttonRefl.Location = new Point(644, 23);
+			buttonRefl.Margin = new Padding(6, 5, 6, 5);
 			buttonRefl.Name = "buttonRefl";
-			buttonRefl.Size = new Size(70, 35);
+			buttonRefl.Size = new Size(100, 58);
 			buttonRefl.TabIndex = 11;
 			buttonRefl.Text = "Отразить";
 			buttonRefl.UseVisualStyleBackColor = true;
@@ -193,9 +198,9 @@
 			// 
 			// Form1
 			// 
-			AutoScaleDimensions = new SizeF(7F, 15F);
+			AutoScaleDimensions = new SizeF(10F, 25F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(915, 647);
+			ClientSize = new Size(1307, 1078);
 			Controls.Add(buttonRefl);
 			Controls.Add(buttonDod);
 			Controls.Add(buttonIco);
@@ -208,7 +213,7 @@
 			Controls.Add(btnZoomOut);
 			Controls.Add(btnZoomIn);
 			Controls.Add(pictureBox1);
-			Margin = new Padding(4, 3, 4, 3);
+			Margin = new Padding(6, 5, 6, 5);
 			Name = "Form1";
 			Text = "3D Viewer - Лабораторная работа 6";
 			((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
@@ -229,5 +234,10 @@
 		private Button buttonIco;
 		private Button buttonDod;
 		private Button buttonRefl;
+		private ListBox reflOptionsBox;
+		private TextBox textBox1;
+		private TextBox textBox2;
+		private TextBox textBoxX;
+		private TextBox textBoxY;
 	}
 }
