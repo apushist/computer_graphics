@@ -139,14 +139,53 @@ namespace lab6
             return matrix;
         }
 
-        public override string ToString()
-        {
-            return string.Format(
-                "[{0:F2}, {1:F2}, {2:F2}, {3:F2}]\n[{4:F2}, {5:F2}, {6:F2}, {7:F2}]\n[{8:F2}, {9:F2}, {10:F2}, {11:F2}]\n[{12:F2}, {13:F2}, {14:F2}, {15:F2}]",
-                data[0, 0], data[0, 1], data[0, 2], data[0, 3],
-                data[1, 0], data[1, 1], data[1, 2], data[1, 3],
-                data[2, 0], data[2, 1], data[2, 2], data[2, 3],
-                data[3, 0], data[3, 1], data[3, 2], data[3, 3]);
-        }
+		public static Matrix4x4 CreateScaleAroundCenter(double sx, double sy, double sz, Point3D center)
+		{
+			// 1. Смещение в начало координат
+			var toOrigin = CreateTranslation(-center.X, -center.Y, -center.Z);
+			// 2. Масштабирование
+			var scale = CreateScale(sx, sy, sz);
+			// 3. Обратное смещение
+			var fromOrigin = CreateTranslation(center.X, center.Y, center.Z);
+
+			return fromOrigin * scale * toOrigin;
+		}
+
+		public static Matrix4x4 CreateRotationAroundAxis(Point3D pointA, Point3D pointB, double angle)
+		{
+			// Вектор оси
+			Point3D axis = pointB - pointA;
+			Point3D unitAxis = axis.Normalize();
+
+			// Упрощенная реализация - поворот вокруг оси через начало координат
+			double cosA = Math.Cos(angle);
+			double sinA = Math.Sin(angle);
+			double oneMinusCosA = 1 - cosA;
+
+			double x = unitAxis.X;
+			double y = unitAxis.Y;
+			double z = unitAxis.Z;
+
+			var rotation = new Matrix4x4();
+
+			rotation.data[0, 0] = cosA + x * x * oneMinusCosA;
+			rotation.data[0, 1] = x * y * oneMinusCosA - z * sinA;
+			rotation.data[0, 2] = x * z * oneMinusCosA + y * sinA;
+
+			rotation.data[1, 0] = y * x * oneMinusCosA + z * sinA;
+			rotation.data[1, 1] = cosA + y * y * oneMinusCosA;
+			rotation.data[1, 2] = y * z * oneMinusCosA - x * sinA;
+
+			rotation.data[2, 0] = z * x * oneMinusCosA - y * sinA;
+			rotation.data[2, 1] = z * y * oneMinusCosA + x * sinA;
+			rotation.data[2, 2] = cosA + z * z * oneMinusCosA;
+
+			// Комбинируем с трансляцией
+			var toOrigin = CreateTranslation(-pointA.X, -pointA.Y, -pointA.Z);
+			var fromOrigin = CreateTranslation(pointA.X, pointA.Y, pointA.Z);
+
+			return fromOrigin * rotation * toOrigin;
+		}
+
     }
 }

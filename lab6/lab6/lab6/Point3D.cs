@@ -58,7 +58,7 @@ namespace lab6
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
         }
 
-        public void Normalize()
+		public Point3D Normalize()
         {
             double length = Math.Sqrt(X * X + Y * Y + Z * Z);
             if (length > 0)
@@ -67,9 +67,11 @@ namespace lab6
                 Y /= length;
                 Z /= length;
             }
-        }
+            return this;
+		}
 
-        public double Length()
+
+		public double Length()
         {
             return Math.Sqrt(X * X + Y * Y + Z * Z);
         }
@@ -78,5 +80,16 @@ namespace lab6
         {
             return string.Format("({0:F2}, {1:F2}, {2:F2}, {3:F2})", X, Y, Z, W);
         }
-    }
+
+
+		public static Point3D operator *(Point3D point, double scalar)
+		{
+			return new Point3D(point.X * scalar, point.Y * scalar, point.Z * scalar, point.W);
+		}
+
+		public static Point3D operator +(Point3D a, Point3D b)
+		{
+			return new Point3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z, 1);
+		}
+	}
 }

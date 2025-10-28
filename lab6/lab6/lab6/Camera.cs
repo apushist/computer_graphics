@@ -33,7 +33,6 @@ namespace lab6
 
         private Matrix4x4 CreateAxonometricProjection()
         {
-            double angle = Math.PI / 4;
 
             Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
             Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
@@ -54,7 +53,7 @@ namespace lab6
             });
         }
 
-        public System.Drawing.PointF ProjectTo2D(Point3D point3D, int screenWidth, int screenHeight)
+        public PointF ProjectTo2D(Point3D point3D, int screenWidth, int screenHeight)
         {
             Point3D transformed = new Point3D(point3D.X, point3D.Y, point3D.Z);
             Matrix4x4 projection = GetProjectionMatrix();
@@ -63,7 +62,7 @@ namespace lab6
             float x = (float)(transformed.X * 100 + screenWidth / 2);
             float y = (float)(-transformed.Y * 100 + screenHeight / 2);
 
-            return new System.Drawing.PointF(x, y);
+            return new PointF(x, y);
         }
 
         public void Rotate(double deltaX, double deltaY)
