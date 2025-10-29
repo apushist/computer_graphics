@@ -76,7 +76,8 @@ namespace lab6
                 transformed.Z /= transformed.W;
             }
 
-            float scale = 200f;
+            // УМЕНЬШИЛ масштаб с 200f до 80f
+            float scale = 80f;
             float x = (float)(transformed.X * scale + screenWidth / 2);
             float y = (float)(-transformed.Y * scale + screenHeight / 2);
 

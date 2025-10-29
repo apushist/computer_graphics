@@ -12,13 +12,13 @@ namespace lab6
         private Camera camera = new Camera();
         private Viewport viewport = new Viewport();
         private List<Point3D> points = new List<Point3D>();
-        private bool isRotatingCamera = false; // для вращения камеры (ПКМ)
-        private bool isRotatingObject = false; // для вращения объекта (ЛКМ)
+        private bool isRotatingCamera = false;
+        private bool isRotatingObject = false; 
         private Point lastMousePosition;
         //private Button btnResetRotation;
         private List<Polyhedron> polyhedrons = new List<Polyhedron>();
         public Polyhedron currentPolyhedron;
-        private Matrix4x4 objectRotation = new Matrix4x4(); // матрица вращения объекта
+        private Matrix4x4 objectRotation = new Matrix4x4();
         private string chosenOption = "XY";
         private double dx = 1;
         private double dy = 1;
@@ -50,7 +50,7 @@ namespace lab6
             polyhedrons.Add(Polyhedron.CreateIcosahedron());
             polyhedrons.Add(Polyhedron.CreateDodecaedr());
 
-            currentPolyhedron = polyhedrons[0]; // Начинаем с тетраэдра
+            currentPolyhedron = polyhedrons[0];
 
         }
 
@@ -59,10 +59,8 @@ namespace lab6
             camera.RotateX = 30.0;
             camera.RotateY = 45.0;
 
-            // Сбрасываем вращение объекта
             if (currentPolyhedron != null)
             {
-                // Восстанавливаем исходное состояние многогранника
                 ResetCurrentPolyhedron();
             }
 
@@ -97,6 +95,8 @@ namespace lab6
         {
             if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
 
+            float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
+
             using (Pen pen = new Pen(Color.Black, 2))
             {
                 foreach (var face in currentPolyhedron.Faces)
@@ -104,22 +104,47 @@ namespace lab6
                     if (face.Count < 2) continue;
 
                     var points = new PointF[face.Count];
+                    bool validFace = true;
+
                     for (int i = 0; i < face.Count; i++)
                     {
                         var vertex = currentPolyhedron.Vertices[face[i]];
                         points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+
+                        if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+                        {
+                            validFace = false;
+                            break;
+                        }
                     }
 
-                    // Рисуем контур грани
-                    g.DrawPolygon(pen, points);
+                    if (validFace)
+                    {
+                        try
+                        {
+                            g.DrawPolygon(pen, points);
+                        }
+                        catch (Exception)
+                        {
+                           
+                        }
+                    }
                 }
             }
 
-            // Рисуем вершины
             foreach (var vertex in currentPolyhedron.Vertices)
             {
                 var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
-                g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
+                if (Math.Abs(screenPoint.X) <= maxCoord && Math.Abs(screenPoint.Y) <= maxCoord)
+                {
+                    try
+                    {
+                        g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
             }
         }
 
@@ -127,35 +152,53 @@ namespace lab6
 
         private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
         {
-            using (Pen pen = new Pen(color, 2))
+            try
             {
-                g.DrawLine(pen, start, end);
-            }
+                float maxX = pictureBox1.Width * 2f;
+                float maxY = pictureBox1.Height * 2f;
 
-            float dx = end.X - start.X;
-            float dy = end.Y - start.Y;
-            float length = (float)Math.Sqrt(dx * dx + dy * dy);
-
-            if (length > 0)
-            {
-                dx /= length;
-                dy /= length;
-
-                float arrowSize = 10f;
-
-                float angle = (float)(Math.PI / 6);
-
-                float leftX = end.X - arrowSize * (float)Math.Cos(angle) * dx + arrowSize * (float)Math.Sin(angle) * dy;
-                float leftY = end.Y - arrowSize * (float)Math.Cos(angle) * dy - arrowSize * (float)Math.Sin(angle) * dx;
-
-                float rightX = end.X - arrowSize * (float)Math.Cos(angle) * dx - arrowSize * (float)Math.Sin(angle) * dy;
-                float rightY = end.Y - arrowSize * (float)Math.Cos(angle) * dy + arrowSize * (float)Math.Sin(angle) * dx;
-
-                using (Pen arrowPen = new Pen(color, 2))
+                if (Math.Abs(start.X) > maxX || Math.Abs(start.Y) > maxY ||
+                    Math.Abs(end.X) > maxX || Math.Abs(end.Y) > maxY)
                 {
-                    g.DrawLine(arrowPen, end, new PointF(leftX, leftY));
-                    g.DrawLine(arrowPen, end, new PointF(rightX, rightY));
+                    return; 
                 }
+
+                using (Pen pen = new Pen(color, 2))
+                {
+                    g.DrawLine(pen, start, end);
+                }
+
+                float dx = end.X - start.X;
+                float dy = end.Y - start.Y;
+                float length = (float)Math.Sqrt(dx * dx + dy * dy);
+
+                if (length > 0)
+                {
+                    dx /= length;
+                    dy /= length;
+
+                    float arrowSize = 10f;
+                    float angle = (float)(Math.PI / 6);
+
+                    float leftX = end.X - arrowSize * (float)Math.Cos(angle) * dx + arrowSize * (float)Math.Sin(angle) * dy;
+                    float leftY = end.Y - arrowSize * (float)Math.Cos(angle) * dy - arrowSize * (float)Math.Sin(angle) * dx;
+
+                    float rightX = end.X - arrowSize * (float)Math.Cos(angle) * dx - arrowSize * (float)Math.Sin(angle) * dy;
+                    float rightY = end.Y - arrowSize * (float)Math.Cos(angle) * dy + arrowSize * (float)Math.Sin(angle) * dx;
+
+                    if (Math.Abs(leftX) <= maxX && Math.Abs(leftY) <= maxY &&
+                        Math.Abs(rightX) <= maxX && Math.Abs(rightY) <= maxY)
+                    {
+                        using (Pen arrowPen = new Pen(color, 2))
+                        {
+                            g.DrawLine(arrowPen, end, new PointF(leftX, leftY));
+                            g.DrawLine(arrowPen, end, new PointF(rightX, rightY));
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -231,7 +274,6 @@ namespace lab6
                 float deltaX = e.X - lastMousePosition.X;
                 float deltaY = e.Y - lastMousePosition.Y;
 
-                // Вращаем объект вокруг его центра
                 RotateObject(deltaX, deltaY);
 
                 lastMousePosition = e.Location;
@@ -259,20 +301,16 @@ namespace lab6
 
             Point3D center = currentPolyhedron.GetCenter();
 
-            // Создаем матрицы вращения вокруг центра объекта
             Matrix4x4 toOrigin = Matrix4x4.CreateTranslation(-center.X, -center.Y, -center.Z);
             Matrix4x4 fromOrigin = Matrix4x4.CreateTranslation(center.X, center.Y, center.Z);
 
             Matrix4x4 rotY = Matrix4x4.CreateRotationY(deltaX * 0.01);
             Matrix4x4 rotX = Matrix4x4.CreateRotationX(deltaY * 0.01);
 
-            // Комбинируем преобразования
             Matrix4x4 rotation = fromOrigin * rotX * rotY * toOrigin;
 
-            // Применяем вращение к объекту
             currentPolyhedron.Transform(rotation);
 
-            // Обновляем общую матрицу вращения объекта
             objectRotation = rotation * objectRotation;
         }
 
@@ -280,11 +318,9 @@ namespace lab6
         {
             if (currentPolyhedron == null) return;
 
-            // Находим индекс текущего многогранника
             int index = polyhedrons.IndexOf(currentPolyhedron);
             if (index >= 0)
             {
-                // Заменяем текущий многогранник на новый (без вращения)
                 switch (index)
                 {
                     case 0: currentPolyhedron = Polyhedron.CreateTetrahedron(); break;
@@ -296,7 +332,7 @@ namespace lab6
                 polyhedrons[index] = currentPolyhedron;
             }
 
-            objectRotation.MakeIdentity(); // сбрасываем матрицу вращения
+            objectRotation.MakeIdentity(); 
         }
 
         private void ZoomPolyhedron(float scaleFactor)
