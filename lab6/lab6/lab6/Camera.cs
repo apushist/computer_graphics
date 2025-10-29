@@ -31,40 +31,27 @@ namespace lab6
             };
         }
 
-        private Matrix4x4 CreateAxonometricProjection()
-        {
+        private Matrix4x4 CreatePerspectiveProjection()
+        {            
+			Matrix4x4 matrix = Matrix4x4.CreatePerspectMatrix();
+			Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
+			Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
 
-            Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
-            Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
-
-            return rotationY * rotationX;
+			return rotationY * rotationX * matrix;
         }
 
-        private Matrix4x4 CreatePerspectiveProjection()
+        private Matrix4x4 CreateAxonometricProjection()
         {
-            double fov = FieldOfView * Math.PI / 180.0;
-            double aspect = 1.0;
-            double near = 1.0;
-            double far = 100.0;
+			Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
+			Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
+            Matrix4x4 matrix = Matrix4x4.CreateAxonMatrix();
 
-            double f = 1.0 / Math.Tan(fov / 2.0);
-
-            return new Matrix4x4(new double[4, 4]
-            {
-                { f / aspect, 0, 0, 0 },
-                { 0, f, 0, 0 },
-                { 0, 0, (far + near) / (near - far), (2 * far * near) / (near - far) },
-                { 0, 0, -1, 0 }
-            });
+			return rotationY * rotationX * matrix;
         }
 
         public PointF ProjectTo2D(Point3D point3D, int screenWidth, int screenHeight)
         {
             Point3D transformed = new Point3D(point3D.X, point3D.Y, point3D.Z);
-
-            Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
-            Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
-            transformed.Transform(rotationY * rotationX);
 
             Matrix4x4 projection = GetProjectionMatrix();
             transformed.Transform(projection);
@@ -76,7 +63,6 @@ namespace lab6
                 transformed.Z /= transformed.W;
             }
 
-            // УМЕНЬШИЛ масштаб с 200f до 80f
             float scale = 80f;
             float x = (float)(transformed.X * scale + screenWidth / 2);
             float y = (float)(-transformed.Y * scale + screenHeight / 2);

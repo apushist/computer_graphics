@@ -15,7 +15,6 @@ namespace lab6
         private bool isRotatingCamera = false;
         private bool isRotatingObject = false; 
         private Point lastMousePosition;
-        //private Button btnResetRotation;
         private List<Polyhedron> polyhedrons = new List<Polyhedron>();
         public Polyhedron currentPolyhedron;
         private Matrix4x4 objectRotation = new Matrix4x4();
@@ -243,13 +242,13 @@ namespace lab6
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Right && camera.CurrentProjection == Camera.ProjectionType.Axonometric)
             {
                 isRotatingCamera = true;
                 lastMousePosition = e.Location;
                 pictureBox1.Cursor = Cursors.SizeAll;
             }
-            else if (e.Button == MouseButtons.Left)
+            else if (e.Button == MouseButtons.Left )
             {
                 isRotatingObject = true;
                 lastMousePosition = e.Location;

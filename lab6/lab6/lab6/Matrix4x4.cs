@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace lab6
 {
+
     public class Matrix4x4
     {
-        private double[,] data;
+		const int c = 10;
+
+		private double[,] data;
 
         public Matrix4x4()
         {
@@ -84,11 +88,14 @@ namespace lab6
             double sin = Math.Sin(angle);
 
             Matrix4x4 matrix = new Matrix4x4();
+            matrix.data[0, 0] = 1;
             matrix.data[1, 1] = cos;
             matrix.data[1, 2] = -sin;
             matrix.data[2, 1] = sin;
             matrix.data[2, 2] = cos;
-            return matrix;
+			matrix.data[3, 3] = 1;
+
+			return matrix;
         }
 
         public static Matrix4x4 CreateRotationY(double angle)
@@ -98,9 +105,11 @@ namespace lab6
 
             Matrix4x4 matrix = new Matrix4x4();
             matrix.data[0, 0] = cos;
+            matrix.data[1, 1] = 1;
             matrix.data[0, 2] = sin;
             matrix.data[2, 0] = -sin;
             matrix.data[2, 2] = cos;
+            matrix.data[3, 3] = 1;
             return matrix;
         }
 
@@ -117,7 +126,27 @@ namespace lab6
             return matrix;
         }
 
-        public static Matrix4x4 CreateReflection(string plane)
+		public static Matrix4x4 CreateAxonMatrix()
+        {
+			Matrix4x4 matrix = new Matrix4x4();
+			matrix.data[0, 0] = 1;
+			matrix.data[1, 1] = 1;
+			matrix.data[3,3] = 1;
+			return matrix;
+		}
+
+		public static Matrix4x4 CreatePerspectMatrix()
+		{
+			Matrix4x4 matrix = new Matrix4x4();
+			matrix.data[0, 0] = 1;
+			matrix.data[1, 1] = 1;
+			matrix.data[2, 2] = 0;
+			matrix.data[3, 2] = -1.0/c;
+			matrix.data[3, 3] = 1;
+			return matrix;
+		}
+
+		public static Matrix4x4 CreateReflection(string plane)
         {
             if (string.IsNullOrWhiteSpace(plane))
                 throw new ArgumentException("plane is null or empty");
@@ -147,11 +176,10 @@ namespace lab6
 
 		public static Matrix4x4 CreateScaleAroundCenter(double sx, double sy, double sz, Point3D center)
 		{
-			// 1. Смещение в начало координат
 			var toOrigin = CreateTranslation(-center.X, -center.Y, -center.Z);
-			// 2. Масштабирование
+			
 			var scale = CreateScale(sx, sy, sz);
-			// 3. Обратное смещение
+		
 			var fromOrigin = CreateTranslation(center.X, center.Y, center.Z);
 
 			return fromOrigin * scale * toOrigin;
@@ -159,11 +187,9 @@ namespace lab6
 
 		public static Matrix4x4 CreateRotationAroundAxis(Point3D pointA, Point3D pointB, double angle)
 		{
-			// Вектор оси
 			Point3D axis = pointB - pointA;
 			Point3D unitAxis = axis.Normalize();
 
-			// Упрощенная реализация - поворот вокруг оси через начало координат
 			double cosA = Math.Cos(angle);
 			double sinA = Math.Sin(angle);
 			double oneMinusCosA = 1 - cosA;
@@ -186,7 +212,6 @@ namespace lab6
 			rotation.data[2, 1] = z * y * oneMinusCosA + x * sinA;
 			rotation.data[2, 2] = cosA + z * z * oneMinusCosA;
 
-			// Комбинируем с трансляцией
 			var toOrigin = CreateTranslation(-pointA.X, -pointA.Y, -pointA.Z);
 			var fromOrigin = CreateTranslation(pointA.X, pointA.Y, pointA.Z);
 

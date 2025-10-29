@@ -50,10 +50,10 @@ namespace lab6
 
 			poly.Faces.AddRange(
 			[
-				new List<int> { 0, 1, 2 },
-				new List<int> { 0, 2, 3 },
-				new List<int> { 0, 3, 1 },
-				new List<int> { 1, 3, 2 }
+				[0, 1, 2 ],
+				[ 0, 2, 3 ],
+				[0, 3, 1],
+				[ 1, 3, 2 ]
 			]);
 
 			return poly;
@@ -78,12 +78,12 @@ namespace lab6
 
 			poly.Faces.AddRange(
 			[
-				new List<int> { 0, 1, 2, 3 },
-                new List<int> { 4, 5, 6, 7 },
-                new List<int> { 0, 1, 5, 4 }, 
-                new List<int> { 2, 3, 7, 6 },
-                new List<int> { 0, 3, 7, 4 }, 
-                new List<int> { 1, 2, 6, 5 }  
+				[ 0, 1, 2, 3 ],
+                [ 4, 5, 6, 7 ],
+                [ 0, 1, 5, 4 ], 
+                [ 2, 3, 7, 6 ],
+                [0, 3, 7, 4], 
+                [1, 2, 6, 5]  
             ]);
 
 			return poly;
@@ -125,8 +125,6 @@ namespace lab6
 			double s = size;
 			// Золотое сечение
 			double phi = (1.0 + Math.Sqrt(5.0)) / 2.0;
-
-			// Нормализация для получения правильного размера
 			double a = s / Math.Sqrt(1.0 + phi * phi);			
 			double b = a * phi;
 
@@ -215,18 +213,18 @@ namespace lab6
 
 			poly.Faces.AddRange(
 			[
-				new List<int> { 0, 8, 10, 2, 16 },     
-				new List<int> { 0, 12, 14, 4, 8 },     
-				new List<int> { 0, 16, 17, 1, 12 },    
-				new List<int> { 1, 9, 11, 3, 17 },   
-				new List<int> { 1, 12, 14, 5, 9 },  
-				new List<int> { 2, 10, 6, 15, 13 },  
-				new List<int> { 2, 13, 3, 17, 16 },   
-				new List<int> { 3, 11, 7, 19, 13 },   
-				new List<int> { 4, 8, 10, 6, 18 },   
-				new List<int> { 4, 14, 5, 19, 18 }, 
-				new List<int> { 5, 9, 11, 7, 19 },     
-				new List<int> { 6, 15, 7, 19, 18 }   
+				[0, 8, 10, 2, 16],      
+				[0, 12, 14, 4, 8],      
+				[0, 16, 17, 1, 12],    
+				[1, 17, 3, 11, 9],    
+				[1, 9, 5, 14, 12],    
+				[2, 10, 6, 15, 13],   
+				[2, 16, 17, 3, 13],     
+				[3, 13, 15, 7, 11],     
+				[4, 8, 10, 6, 18],      
+				[4, 18, 19, 5, 14],     
+				[5, 19, 7, 11, 9],    
+				[6, 18, 19, 7, 15]
 			]);
 			return poly;
 		}
