@@ -119,18 +119,24 @@ namespace lab6
 
         public static Matrix4x4 CreateReflection(string plane)
         {
-            Matrix4x4 matrix = new Matrix4x4();
+            if (string.IsNullOrWhiteSpace(plane))
+                throw new ArgumentException("plane is null or empty");
 
-            switch (plane.ToUpper())
+            string p = plane.Trim().ToUpperInvariant();
+
+            var matrix = new Matrix4x4();
+            matrix.MakeIdentity();
+
+            switch (p)
             {
                 case "XY":
-                    matrix.data[2, 2] = -1;
+                    matrix.data[2, 2] = -1.0;
                     break;
                 case "XZ":
-                    matrix.data[1, 1] = -1;
+                    matrix.data[1, 1] = -1.0;
                     break;
                 case "YZ":
-                    matrix.data[0, 0] = -1;
+                    matrix.data[0, 0] = -1.0;
                     break;
                 default:
                     throw new ArgumentException("Invalid plane. Use XY, XZ, or YZ");
@@ -186,6 +192,5 @@ namespace lab6
 
 			return fromOrigin * rotation * toOrigin;
 		}
-
     }
 }

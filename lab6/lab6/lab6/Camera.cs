@@ -11,7 +11,7 @@ namespace lab6
         }
 
         public ProjectionType CurrentProjection { get; set; }
-        public double FieldOfView { get; set; } = 60.0;
+        public double FieldOfView { get; set; } = 80.0;
 
         public double RotateX { get; set; } = 30.0;
         public double RotateY { get; set; } = 45.0;
@@ -43,24 +43,42 @@ namespace lab6
         private Matrix4x4 CreatePerspectiveProjection()
         {
             double fov = FieldOfView * Math.PI / 180.0;
-            double scale = 1.0 / Math.Tan(fov * 0.5);
+            double aspect = 1.0;
+            double near = 1.0;
+            double far = 100.0;
 
-            return new Matrix4x4(new double[4, 4] {
-                { scale, 0, 0, 0 },
-                { 0, scale, 0, 0 },
-                { 0, 0, 1, 0 },
-                { 0, 0, 1, 0 }
+            double f = 1.0 / Math.Tan(fov / 2.0);
+
+            return new Matrix4x4(new double[4, 4]
+            {
+                { f / aspect, 0, 0, 0 },
+                { 0, f, 0, 0 },
+                { 0, 0, (far + near) / (near - far), (2 * far * near) / (near - far) },
+                { 0, 0, -1, 0 }
             });
         }
 
         public PointF ProjectTo2D(Point3D point3D, int screenWidth, int screenHeight)
         {
             Point3D transformed = new Point3D(point3D.X, point3D.Y, point3D.Z);
+
+            Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
+            Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
+            transformed.Transform(rotationY * rotationX);
+
             Matrix4x4 projection = GetProjectionMatrix();
             transformed.Transform(projection);
 
-            float x = (float)(transformed.X * 100 + screenWidth / 2);
-            float y = (float)(-transformed.Y * 100 + screenHeight / 2);
+            if (transformed.W != 0)
+            {
+                transformed.X /= transformed.W;
+                transformed.Y /= transformed.W;
+                transformed.Z /= transformed.W;
+            }
+
+            float scale = 200f;
+            float x = (float)(transformed.X * scale + screenWidth / 2);
+            float y = (float)(-transformed.Y * scale + screenHeight / 2);
 
             return new PointF(x, y);
         }
