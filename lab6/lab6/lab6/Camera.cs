@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace lab6
+﻿namespace lab6
 {
     public class Camera
     {
