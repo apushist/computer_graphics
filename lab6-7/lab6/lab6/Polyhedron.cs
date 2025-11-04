@@ -228,5 +228,66 @@ namespace lab6
 			]);
 			return poly;
 		}
+
+		public static Polyhedron CreateFigOfRevolution(List<Point3D> generatrix, char axis, int segments)
+		{
+            var poly = new Polyhedron();
+            double angleStep = 2 * Math.PI / segments;
+
+			for (int i = 0; i < segments; i++)
+			{
+				double angle = i * angleStep;
+				double cosA = Math.Cos(angle);
+				double sinA = Math.Sin(angle);
+
+				foreach (var p in generatrix)
+				{
+					double x = p.X, y = p.Y, z = p.Z;
+					
+					switch(axis)
+					{
+						case 'X':
+							poly.Vertices.Add(new Point3D(
+								x, 
+								y * cosA - z * sinA,
+								y * sinA + z * cosA
+							));
+							break;
+						case 'Y':
+                            poly.Vertices.Add(new Point3D(
+                                x * cosA + z * sinA,
+                                y,
+                                -x * sinA + z * cosA
+                            ));
+                            break;
+                        case 'Z':
+                            poly.Vertices.Add(new Point3D(
+                                x * cosA - y * sinA,
+                                x * sinA + y * cosA,
+                                z
+                            ));
+                            break;
+                    }
+				}
+			}
+
+			int m = generatrix.Count;
+			for (int i = 0; i < segments; i++)
+			{
+				int next = (i + 1) % segments;
+				for (int j = 0; j < m - 1; j++)
+				{
+					poly.Faces.Add(new List<int>
+					{
+						i * m + j,
+						next * m + j,
+						next * m + (j + 1),
+						i * m + (j + 1)
+					});
+				}
+			}
+
+			return poly;
+		}
 	}
 }
