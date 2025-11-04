@@ -514,5 +514,21 @@ namespace lab6
             var rotateForm = new RotateAroundAxisForm(this);
             rotateForm.ShowDialog();
         }
+
+        private void ButtonFigRotate_Click(object sender, EventArgs e)
+        {
+            using var form = new FormFigureOfRevolution();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                var fig = Polyhedron.CreateFigOfRevolution(
+                    form.Generatrix,
+                    form.Axis,
+                    form.Segments
+                );
+                currentPolyhedron = fig;
+                objectRotation.MakeIdentity();
+                pictureBox1.Invalidate();
+            }
+        }
     }
 }
