@@ -6,7 +6,7 @@ namespace lab6
         private Viewport viewport = new Viewport();
         private List<Point3D> points = new List<Point3D>();
         private bool isRotatingCamera = false;
-        private bool isRotatingObject = false; 
+        private bool isRotatingObject = false;
         private Point lastMousePosition;
         private List<Polyhedron> polyhedrons = new List<Polyhedron>();
         public Polyhedron currentPolyhedron;
@@ -118,7 +118,7 @@ namespace lab6
                         }
                         catch (Exception)
                         {
-                           
+
                         }
                     }
                 }
@@ -152,7 +152,7 @@ namespace lab6
                 if (Math.Abs(start.X) > maxX || Math.Abs(start.Y) > maxY ||
                     Math.Abs(end.X) > maxX || Math.Abs(end.Y) > maxY)
                 {
-                    return; 
+                    return;
                 }
 
                 using (Pen pen = new Pen(color, 2))
@@ -241,7 +241,7 @@ namespace lab6
                 lastMousePosition = e.Location;
                 pictureBox1.Cursor = Cursors.SizeAll;
             }
-            else if (e.Button == MouseButtons.Left )
+            else if (e.Button == MouseButtons.Left)
             {
                 isRotatingObject = true;
                 lastMousePosition = e.Location;
@@ -324,7 +324,7 @@ namespace lab6
                 polyhedrons[index] = currentPolyhedron;
             }
 
-            objectRotation.MakeIdentity(); 
+            objectRotation.MakeIdentity();
         }
 
         private void ZoomPolyhedron(float scaleFactor)
@@ -528,6 +528,25 @@ namespace lab6
                 currentPolyhedron = fig;
                 objectRotation.MakeIdentity();
                 pictureBox1.Invalidate();
+            }
+        }
+
+        private void ButtonFunctionGraph_Click(object sender, EventArgs e)
+        {
+            using (var form = new FormFunctionGraph())
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    var surface = Polyhedron.CreateFunctionSurface(
+                        form.Function,
+                        form.XMin, form.XMax,
+                        form.YMin, form.YMax,
+                        form.Steps
+                    );
+                    currentPolyhedron = surface;
+                    objectRotation.MakeIdentity();
+                    pictureBox1.Invalidate();
+                }
             }
         }
     }

@@ -64,6 +64,7 @@
             textBoxTransX = new TextBox();
             tableLayoutPanel1 = new TableLayoutPanel();
             buttonFigRotate = new Button();
+            ButtonFunctionGraph = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             panel1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -452,6 +453,7 @@
             tableLayoutPanel1.Controls.Add(buttonDod, 4, 0);
             tableLayoutPanel1.Controls.Add(buttonOct, 2, 0);
             tableLayoutPanel1.Controls.Add(buttonIco, 3, 0);
+            tableLayoutPanel1.Controls.Add(ButtonFunctionGraph, 1, 1);
             tableLayoutPanel1.Location = new Point(-3, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 2;
@@ -472,6 +474,16 @@
             buttonFigRotate.TextAlign = ContentAlignment.TopCenter;
             buttonFigRotate.UseVisualStyleBackColor = true;
             buttonFigRotate.Click += ButtonFigRotate_Click;
+            // 
+            // ButtonFunctionGraph
+            // 
+            ButtonFunctionGraph.Location = new Point(183, 46);
+            ButtonFunctionGraph.Name = "ButtonFunctionGraph";
+            ButtonFunctionGraph.Size = new Size(174, 39);
+            ButtonFunctionGraph.TabIndex = 12;
+            ButtonFunctionGraph.Text = "Поверхность функции";
+            ButtonFunctionGraph.UseVisualStyleBackColor = true;
+            ButtonFunctionGraph.Click += ButtonFunctionGraph_Click;
             // 
             // Form1
             // 
@@ -529,5 +541,6 @@
         private Button buttonRotate;
         private Button buttonRotateAroundAxis;
         private Button buttonFigRotate;
+        private Button ButtonFunctionGraph;
     }
 }
