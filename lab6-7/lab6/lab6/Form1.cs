@@ -562,5 +562,24 @@ namespace lab6
 				}
 			}
 		}
+
+		private void buttonFunctionGraph_Click(object sender, EventArgs e)
+		{
+			using (var form = new FormFunctionGraph())
+			{
+				if (form.ShowDialog() == DialogResult.OK)
+				{
+					var surface = Polyhedron.CreateFunctionSurface(
+						form.Function,
+						form.XMin, form.XMax,
+						form.YMin, form.YMax,
+						form.Steps
+					);
+					currentPolyhedron = surface;
+					objectRotation.MakeIdentity();
+					pictureBox1.Invalidate();
+				}
+			}
+		}
 	}
 }

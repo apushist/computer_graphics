@@ -63,6 +63,7 @@
 			textBoxTransZ = new TextBox();
 			textBoxTransX = new TextBox();
 			tableLayoutPanel1 = new TableLayoutPanel();
+			buttonFunctionGraph = new Button();
 			buttonSave = new Button();
 			buttonLoad = new Button();
 			buttonFigRotate = new Button();
@@ -463,6 +464,7 @@
 			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
 			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
 			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+			tableLayoutPanel1.Controls.Add(buttonFunctionGraph, 3, 1);
 			tableLayoutPanel1.Controls.Add(buttonSave, 2, 1);
 			tableLayoutPanel1.Controls.Add(buttonLoad, 1, 1);
 			tableLayoutPanel1.Controls.Add(buttonFigRotate, 0, 1);
@@ -479,6 +481,19 @@
 			tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 56F));
 			tableLayoutPanel1.Size = new Size(1130, 110);
 			tableLayoutPanel1.TabIndex = 18;
+			// 
+			// buttonFunctionGraph
+			// 
+			buttonFunctionGraph.Font = new Font("Segoe UI", 12F);
+			buttonFunctionGraph.Location = new Point(684, 59);
+			buttonFunctionGraph.Margin = new Padding(6, 5, 6, 5);
+			buttonFunctionGraph.Name = "buttonFunctionGraph";
+			buttonFunctionGraph.Size = new Size(212, 42);
+			buttonFunctionGraph.TabIndex = 14;
+			buttonFunctionGraph.Text = "Поверхность функции";
+			buttonFunctionGraph.TextAlign = ContentAlignment.TopCenter;
+			buttonFunctionGraph.UseVisualStyleBackColor = true;
+			buttonFunctionGraph.Click += buttonFunctionGraph_Click;
 			// 
 			// buttonSave
 			// 
@@ -518,17 +533,6 @@
 			buttonFigRotate.TextAlign = ContentAlignment.TopCenter;
 			buttonFigRotate.UseVisualStyleBackColor = true;
 			buttonFigRotate.Click += ButtonFigRotate_Click;
-			// 
-            // ButtonFunctionGraph
-            // 
-            ButtonFunctionGraph.Location = new Point(183, 46);
-            ButtonFunctionGraph.Name = "ButtonFunctionGraph";
-            ButtonFunctionGraph.Size = new Size(174, 39);
-            ButtonFunctionGraph.TabIndex = 12;
-            ButtonFunctionGraph.Text = "Поверхность функции";
-            ButtonFunctionGraph.UseVisualStyleBackColor = true;
-            ButtonFunctionGraph.Click += ButtonFunctionGraph_Click;
-            //
 			// 
 			// Form1
 			// 
@@ -586,8 +590,8 @@
         private Button buttonRotate;
         private Button buttonRotateAroundAxis;
         private Button buttonFigRotate;
-		private Button ButtonFunctionGraph;
 		private Button buttonLoad;
 		private Button buttonSave;
+		private Button buttonFunctionGraph;
 	}
 }
