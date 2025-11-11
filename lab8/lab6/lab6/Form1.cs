@@ -28,6 +28,7 @@ namespace lab6
 		{
 			InitializeComponent();
 			InitializePoints();
+			viewport.EnableZBuffer(false);
 			this.Resize += (s, e) =>
 			{
 				viewport.InitializeZBuffer(pictureBox1.Width, pictureBox1.Height);
@@ -48,24 +49,27 @@ namespace lab6
 			// Создаем базовые полиэдры
 			var tetra = Polyhedron.CreateTetrahedron();
 			tetra.Color = Color.Red;
+			tetra.IsVisible = true;
 
 			var hexa = Polyhedron.CreateHexahedron();
 			hexa.Color = Color.Blue;
+			hexa.IsVisible = false;
 
 			var octa = Polyhedron.CreateOctahedron();
 			octa.Color = Color.Green;
+			octa.IsVisible = false;
 
 			var ico = Polyhedron.CreateIcosahedron();
 			ico.Color = Color.Orange;
+			ico.IsVisible = false;
 
 			var dodeca = Polyhedron.CreateDodecaedr();
 			dodeca.Color = Color.Purple;
+			dodeca.IsVisible = false;
 
 			// Добавляем в общий список
 			allPolyhedrons.AddRange(new[] { tetra, hexa, octa, ico, dodeca });
 
-			// Для обратной совместимости
-			polyhedrons.AddRange(allPolyhedrons);
 
 			selectedPolyhedronIndex = 0;
 			currentPolyhedron = allPolyhedrons[0];
@@ -403,26 +407,31 @@ namespace lab6
 
 		private void ButtonTetr_Click(object sender, EventArgs e)
 		{
+			selectedPolyhedronIndex = 0;
 			TogglePolyhedronVisibility(0);
 		}
 
 		private void ButtonGex_Click(object sender, EventArgs e)
 		{
+			selectedPolyhedronIndex = 1;
 			TogglePolyhedronVisibility(1);
 		}
 
 		private void ButtonOct_Click(object sender, EventArgs e)
 		{
+			selectedPolyhedronIndex = 2;
 			TogglePolyhedronVisibility(2);
 		}
 
 		private void ButtonIco_Click(object sender, EventArgs e)
 		{
+			selectedPolyhedronIndex = 3;
 			TogglePolyhedronVisibility(3);
 		}
 
 		private void ButtonDod_Click(object sender, EventArgs e)
 		{
+			selectedPolyhedronIndex = 4;
 			TogglePolyhedronVisibility(4);
 		}
 
