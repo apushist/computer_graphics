@@ -167,11 +167,11 @@
             return matrix;
         }
 
-		public static Matrix4x4 CreateScaleAroundCenter(double sx, double sy, double sz, Point3D center)
+		public static Matrix4x4 CreateScaleAroundCenter(double scaleFactor, Point3D center)
 		{
 			var toOrigin = CreateTranslation(-center.X, -center.Y, -center.Z);
 			
-			var scale = CreateScale(sx, sy, sz);
+			var scale = CreateScale(scaleFactor, scaleFactor, scaleFactor);
 		
 			var fromOrigin = CreateTranslation(center.X, center.Y, center.Z);
 
