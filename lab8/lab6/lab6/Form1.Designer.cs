@@ -79,7 +79,7 @@
 			pictureBox1.Location = new Point(-4, 119);
 			pictureBox1.Margin = new Padding(6, 5, 6, 5);
 			pictureBox1.Name = "pictureBox1";
-			pictureBox1.Size = new Size(1129, 671);
+			pictureBox1.Size = new Size(1399, 807);
 			pictureBox1.TabIndex = 0;
 			pictureBox1.TabStop = false;
 			pictureBox1.Paint += PictureBox1_Paint;
@@ -91,7 +91,7 @@
 			// btnZoomIn
 			// 
 			btnZoomIn.Font = new Font("Segoe UI", 15F);
-			btnZoomIn.Location = new Point(174, 322);
+			btnZoomIn.Location = new Point(175, 461);
 			btnZoomIn.Margin = new Padding(6, 5, 6, 5);
 			btnZoomIn.Name = "btnZoomIn";
 			btnZoomIn.Size = new Size(50, 50);
@@ -103,7 +103,7 @@
 			// btnZoomOut
 			// 
 			btnZoomOut.Font = new Font("Segoe UI", 15F);
-			btnZoomOut.Location = new Point(9, 322);
+			btnZoomOut.Location = new Point(10, 461);
 			btnZoomOut.Margin = new Padding(6, 5, 6, 5);
 			btnZoomOut.Name = "btnZoomOut";
 			btnZoomOut.Size = new Size(50, 50);
@@ -116,7 +116,7 @@
 			// 
 			btnResetView.BackColor = Color.RosyBrown;
 			btnResetView.Font = new Font("Segoe UI", 11F);
-			btnResetView.Location = new Point(2, 740);
+			btnResetView.Location = new Point(3, 867);
 			btnResetView.Margin = new Padding(6, 5, 6, 5);
 			btnResetView.Name = "btnResetView";
 			btnResetView.Size = new Size(222, 45);
@@ -140,7 +140,7 @@
 			// buttonTrans
 			// 
 			buttonTrans.Font = new Font("Segoe UI", 11F);
-			buttonTrans.Location = new Point(6, 186);
+			buttonTrans.Location = new Point(5, 323);
 			buttonTrans.Margin = new Padding(6, 5, 6, 5);
 			buttonTrans.Name = "buttonTrans";
 			buttonTrans.Size = new Size(219, 45);
@@ -155,7 +155,7 @@
 			buttonTetr.Location = new Point(6, 5);
 			buttonTetr.Margin = new Padding(6, 5, 6, 5);
 			buttonTetr.Name = "buttonTetr";
-			buttonTetr.Size = new Size(212, 42);
+			buttonTetr.Size = new Size(234, 42);
 			buttonTetr.TabIndex = 6;
 			buttonTetr.Text = "Тетраэдр";
 			buttonTetr.TextAlign = ContentAlignment.TopCenter;
@@ -165,10 +165,10 @@
 			// buttonGex
 			// 
 			buttonGex.Font = new Font("Segoe UI", 12F);
-			buttonGex.Location = new Point(232, 5);
+			buttonGex.Location = new Point(261, 5);
 			buttonGex.Margin = new Padding(6, 5, 6, 5);
 			buttonGex.Name = "buttonGex";
-			buttonGex.Size = new Size(212, 42);
+			buttonGex.Size = new Size(204, 42);
 			buttonGex.TabIndex = 7;
 			buttonGex.Text = "Гексаэдр";
 			buttonGex.UseVisualStyleBackColor = true;
@@ -177,10 +177,10 @@
 			// buttonOct
 			// 
 			buttonOct.Font = new Font("Segoe UI", 12F);
-			buttonOct.Location = new Point(458, 5);
+			buttonOct.Location = new Point(477, 5);
 			buttonOct.Margin = new Padding(6, 5, 6, 5);
 			buttonOct.Name = "buttonOct";
-			buttonOct.Size = new Size(212, 42);
+			buttonOct.Size = new Size(195, 42);
 			buttonOct.TabIndex = 8;
 			buttonOct.Text = "Октаэдр";
 			buttonOct.UseVisualStyleBackColor = true;
@@ -192,7 +192,7 @@
 			buttonIco.Location = new Point(684, 5);
 			buttonIco.Margin = new Padding(6, 5, 6, 5);
 			buttonIco.Name = "buttonIco";
-			buttonIco.Size = new Size(212, 42);
+			buttonIco.Size = new Size(203, 42);
 			buttonIco.TabIndex = 9;
 			buttonIco.Text = "Икосаэдр";
 			buttonIco.UseVisualStyleBackColor = true;
@@ -201,7 +201,7 @@
 			// buttonDod
 			// 
 			buttonDod.Font = new Font("Segoe UI", 12F);
-			buttonDod.Location = new Point(910, 5);
+			buttonDod.Location = new Point(899, 5);
 			buttonDod.Margin = new Padding(6, 5, 6, 5);
 			buttonDod.Name = "buttonDod";
 			buttonDod.Size = new Size(214, 42);
@@ -213,7 +213,7 @@
 			// buttonRefl
 			// 
 			buttonRefl.Font = new Font("Segoe UI", 11F);
-			buttonRefl.Location = new Point(6, 669);
+			buttonRefl.Location = new Point(7, 808);
 			buttonRefl.Margin = new Padding(6, 5, 6, 5);
 			buttonRefl.Name = "buttonRefl";
 			buttonRefl.Size = new Size(215, 45);
@@ -272,7 +272,7 @@
 			// 
 			label2.AutoSize = true;
 			label2.Font = new Font("Segoe UI", 12F);
-			label2.Location = new Point(26, 105);
+			label2.Location = new Point(27, 244);
 			label2.Margin = new Padding(4, 0, 4, 0);
 			label2.Name = "label2";
 			label2.Size = new Size(25, 32);
@@ -283,7 +283,7 @@
 			// 
 			label3.AutoSize = true;
 			label3.Font = new Font("Segoe UI", 12F);
-			label3.Location = new Point(100, 105);
+			label3.Location = new Point(101, 244);
 			label3.Margin = new Padding(4, 0, 4, 0);
 			label3.Name = "label3";
 			label3.Size = new Size(26, 32);
@@ -315,16 +315,16 @@
 			panel1.Controls.Add(btnResetView);
 			panel1.Controls.Add(btnSwitchProjection);
 			panel1.Controls.Add(label2);
-			panel1.Location = new Point(1130, 0);
+			panel1.Location = new Point(1400, 0);
 			panel1.Margin = new Padding(4);
 			panel1.Name = "panel1";
-			panel1.Size = new Size(230, 790);
+			panel1.Size = new Size(230, 926);
 			panel1.TabIndex = 12;
 			// 
 			// buttonRotateAroundAxis
 			// 
 			buttonRotateAroundAxis.Font = new Font("Segoe UI", 10F);
-			buttonRotateAroundAxis.Location = new Point(2, 522);
+			buttonRotateAroundAxis.Location = new Point(3, 661);
 			buttonRotateAroundAxis.Margin = new Padding(6, 5, 6, 5);
 			buttonRotateAroundAxis.Name = "buttonRotateAroundAxis";
 			buttonRotateAroundAxis.Size = new Size(221, 46);
@@ -337,7 +337,7 @@
 			// 
 			comboBoxReflection.FormattingEnabled = true;
 			comboBoxReflection.Items.AddRange(new object[] { "XY", "XZ", "YZ" });
-			comboBoxReflection.Location = new Point(6, 625);
+			comboBoxReflection.Location = new Point(7, 764);
 			comboBoxReflection.Margin = new Padding(4);
 			comboBoxReflection.Name = "comboBoxReflection";
 			comboBoxReflection.Size = new Size(216, 33);
@@ -347,7 +347,7 @@
 			// label8
 			// 
 			label8.Font = new Font("Segoe UI", 12F);
-			label8.Location = new Point(9, 582);
+			label8.Location = new Point(5, 721);
 			label8.Margin = new Padding(4, 0, 4, 0);
 			label8.Name = "label8";
 			label8.Size = new Size(218, 39);
@@ -358,7 +358,7 @@
 			// buttonRotate
 			// 
 			buttonRotate.Font = new Font("Segoe UI", 11F);
-			buttonRotate.Location = new Point(2, 466);
+			buttonRotate.Location = new Point(3, 605);
 			buttonRotate.Margin = new Padding(6, 5, 6, 5);
 			buttonRotate.Name = "buttonRotate";
 			buttonRotate.Size = new Size(221, 46);
@@ -371,7 +371,7 @@
 			// 
 			comboBoxRotateAxis.FormattingEnabled = true;
 			comboBoxRotateAxis.Items.AddRange(new object[] { "X", "Y", "Z" });
-			comboBoxRotateAxis.Location = new Point(78, 422);
+			comboBoxRotateAxis.Location = new Point(79, 561);
 			comboBoxRotateAxis.Margin = new Padding(4);
 			comboBoxRotateAxis.Name = "comboBoxRotateAxis";
 			comboBoxRotateAxis.Size = new Size(145, 33);
@@ -380,7 +380,7 @@
 			// label7
 			// 
 			label7.Font = new Font("Segoe UI", 10F);
-			label7.Location = new Point(78, 391);
+			label7.Location = new Point(79, 530);
 			label7.Margin = new Padding(4, 0, 4, 0);
 			label7.Name = "label7";
 			label7.Size = new Size(146, 29);
@@ -389,7 +389,7 @@
 			// 
 			// textBoxAngle
 			// 
-			textBoxAngle.Location = new Point(4, 424);
+			textBoxAngle.Location = new Point(5, 563);
 			textBoxAngle.Margin = new Padding(4);
 			textBoxAngle.Name = "textBoxAngle";
 			textBoxAngle.Size = new Size(62, 31);
@@ -399,7 +399,7 @@
 			// 
 			label6.AutoSize = true;
 			label6.Font = new Font("Segoe UI", 10F);
-			label6.Location = new Point(6, 391);
+			label6.Location = new Point(7, 530);
 			label6.Margin = new Padding(4, 0, 4, 0);
 			label6.Name = "label6";
 			label6.Size = new Size(54, 28);
@@ -409,7 +409,7 @@
 			// label5
 			// 
 			label5.Font = new Font("Segoe UI", 12F);
-			label5.Location = new Point(2, 280);
+			label5.Location = new Point(3, 419);
 			label5.Margin = new Padding(4, 0, 4, 0);
 			label5.Name = "label5";
 			label5.Size = new Size(221, 38);
@@ -421,7 +421,7 @@
 			// 
 			label4.AutoSize = true;
 			label4.Font = new Font("Segoe UI", 12F);
-			label4.Location = new Point(178, 105);
+			label4.Location = new Point(179, 244);
 			label4.Margin = new Padding(4, 0, 4, 0);
 			label4.Name = "label4";
 			label4.Size = new Size(25, 32);
@@ -430,7 +430,7 @@
 			// 
 			// textBoxTransY
 			// 
-			textBoxTransY.Location = new Point(81, 144);
+			textBoxTransY.Location = new Point(82, 283);
 			textBoxTransY.Margin = new Padding(4);
 			textBoxTransY.Name = "textBoxTransY";
 			textBoxTransY.Size = new Size(62, 31);
@@ -439,7 +439,7 @@
 			// 
 			// textBoxTransZ
 			// 
-			textBoxTransZ.Location = new Point(162, 144);
+			textBoxTransZ.Location = new Point(163, 283);
 			textBoxTransZ.Margin = new Padding(4);
 			textBoxTransZ.Name = "textBoxTransZ";
 			textBoxTransZ.Size = new Size(62, 31);
@@ -448,7 +448,7 @@
 			// 
 			// textBoxTransX
 			// 
-			textBoxTransX.Location = new Point(6, 144);
+			textBoxTransX.Location = new Point(7, 283);
 			textBoxTransX.Margin = new Padding(4);
 			textBoxTransX.Name = "textBoxTransX";
 			textBoxTransX.Size = new Size(62, 31);
@@ -458,12 +458,13 @@
 			// tableLayoutPanel1
 			// 
 			tableLayoutPanel1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-			tableLayoutPanel1.ColumnCount = 5;
-			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+			tableLayoutPanel1.ColumnCount = 6;
+			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 22.7475471F));
+			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 19.26851F));
+			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18.4656563F));
+			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 19.1793041F));
+			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20.3389835F));
+			tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 277F));
 			tableLayoutPanel1.Controls.Add(buttonFunctionGraph, 3, 1);
 			tableLayoutPanel1.Controls.Add(buttonSave, 2, 1);
 			tableLayoutPanel1.Controls.Add(buttonLoad, 1, 1);
@@ -479,7 +480,7 @@
 			tableLayoutPanel1.RowCount = 2;
 			tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 			tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 56F));
-			tableLayoutPanel1.Size = new Size(1130, 110);
+			tableLayoutPanel1.Size = new Size(1400, 110);
 			tableLayoutPanel1.TabIndex = 18;
 			// 
 			// buttonFunctionGraph
@@ -488,7 +489,7 @@
 			buttonFunctionGraph.Location = new Point(684, 59);
 			buttonFunctionGraph.Margin = new Padding(6, 5, 6, 5);
 			buttonFunctionGraph.Name = "buttonFunctionGraph";
-			buttonFunctionGraph.Size = new Size(212, 42);
+			buttonFunctionGraph.Size = new Size(203, 42);
 			buttonFunctionGraph.TabIndex = 14;
 			buttonFunctionGraph.Text = "Поверхность функции";
 			buttonFunctionGraph.TextAlign = ContentAlignment.TopCenter;
@@ -498,10 +499,10 @@
 			// buttonSave
 			// 
 			buttonSave.Font = new Font("Segoe UI", 12F);
-			buttonSave.Location = new Point(458, 59);
+			buttonSave.Location = new Point(477, 59);
 			buttonSave.Margin = new Padding(6, 5, 6, 5);
 			buttonSave.Name = "buttonSave";
-			buttonSave.Size = new Size(212, 42);
+			buttonSave.Size = new Size(195, 42);
 			buttonSave.TabIndex = 13;
 			buttonSave.Text = "Сохранить";
 			buttonSave.TextAlign = ContentAlignment.TopCenter;
@@ -511,10 +512,10 @@
 			// buttonLoad
 			// 
 			buttonLoad.Font = new Font("Segoe UI", 12F);
-			buttonLoad.Location = new Point(232, 59);
+			buttonLoad.Location = new Point(261, 59);
 			buttonLoad.Margin = new Padding(6, 5, 6, 5);
 			buttonLoad.Name = "buttonLoad";
-			buttonLoad.Size = new Size(212, 42);
+			buttonLoad.Size = new Size(204, 42);
 			buttonLoad.TabIndex = 12;
 			buttonLoad.Text = "Загрузить";
 			buttonLoad.TextAlign = ContentAlignment.TopCenter;
@@ -527,7 +528,7 @@
 			buttonFigRotate.Location = new Point(6, 59);
 			buttonFigRotate.Margin = new Padding(6, 5, 6, 5);
 			buttonFigRotate.Name = "buttonFigRotate";
-			buttonFigRotate.Size = new Size(212, 42);
+			buttonFigRotate.Size = new Size(234, 42);
 			buttonFigRotate.TabIndex = 11;
 			buttonFigRotate.Text = "Фигура вращения";
 			buttonFigRotate.TextAlign = ContentAlignment.TopCenter;
@@ -538,7 +539,7 @@
 			// 
 			AutoScaleDimensions = new SizeF(10F, 25F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(1360, 790);
+			ClientSize = new Size(1630, 926);
 			Controls.Add(tableLayoutPanel1);
 			Controls.Add(panel1);
 			Controls.Add(pictureBox1);

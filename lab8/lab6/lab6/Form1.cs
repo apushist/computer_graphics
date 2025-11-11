@@ -20,11 +20,19 @@ namespace lab6
 		public Point3D AxisPointA { get; set; } = null;
 		public Point3D AxisPointB { get; set; } = null;
 
+		private List<Polyhedron> allPolyhedrons = new List<Polyhedron>();
+		private int selectedPolyhedronIndex = 0;
+
+
 		public Form1()
 		{
 			InitializeComponent();
 			InitializePoints();
-			this.Resize += (s, e) => pictureBox1.Invalidate();
+			this.Resize += (s, e) =>
+			{
+				viewport.InitializeZBuffer(pictureBox1.Width, pictureBox1.Height);
+				pictureBox1.Invalidate();
+			};
 			comboBoxReflection.Items.Clear();
 			comboBoxReflection.Items.AddRange(["XY", "XZ", "YZ"]);
 			comboBoxReflection.SelectedIndex = 0;
@@ -35,14 +43,34 @@ namespace lab6
 			points.Clear();
 			polyhedrons.Clear();
 
-			// ������� ��� �������������
-			polyhedrons.Add(Polyhedron.CreateTetrahedron());
-			polyhedrons.Add(Polyhedron.CreateHexahedron());
-			polyhedrons.Add(Polyhedron.CreateOctahedron());
-			polyhedrons.Add(Polyhedron.CreateIcosahedron());
-			polyhedrons.Add(Polyhedron.CreateDodecaedr());
+			allPolyhedrons.Clear();
 
-			currentPolyhedron = polyhedrons[0];
+			// Создаем базовые полиэдры
+			var tetra = Polyhedron.CreateTetrahedron();
+			tetra.Color = Color.Red;
+
+			var hexa = Polyhedron.CreateHexahedron();
+			hexa.Color = Color.Blue;
+
+			var octa = Polyhedron.CreateOctahedron();
+			octa.Color = Color.Green;
+
+			var ico = Polyhedron.CreateIcosahedron();
+			ico.Color = Color.Orange;
+
+			var dodeca = Polyhedron.CreateDodecaedr();
+			dodeca.Color = Color.Purple;
+
+			// Добавляем в общий список
+			allPolyhedrons.AddRange(new[] { tetra, hexa, octa, ico, dodeca });
+
+			// Для обратной совместимости
+			polyhedrons.AddRange(allPolyhedrons);
+
+			selectedPolyhedronIndex = 0;
+			currentPolyhedron = allPolyhedrons[0];
+
+			viewport.InitializeZBuffer(pictureBox1.Width, pictureBox1.Height);
 
 		}
 
@@ -52,13 +80,21 @@ namespace lab6
 			e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 			e.Graphics.Clear(Color.White);
 
-			DrawCoordinateAxes(e.Graphics);
-			if (currentPolyhedron != null)
-			{
+			e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+			e.Graphics.Clear(Color.White);
 
-				DrawPolyherdon(e.Graphics, pictureBox1.Width, pictureBox1.Height);
+			viewport.ClearZBuffer();
+
+			if (viewport.IsZBufferEnabled())
+			{
+				DrawWithZBuffer(e.Graphics);
+			}
+			else
+			{
+				DrawWithoutZBuffer(e.Graphics);
 			}
 
+			DrawCoordinateAxes(e.Graphics);
 			DrawInfo(e.Graphics);
 
 			if (AxisPointA != null && AxisPointB != null)
@@ -71,15 +107,48 @@ namespace lab6
 			}
 		}
 
-		public void DrawPolyherdon(Graphics g, int screenWidth, int screenHeight)
+		private void DrawWithZBuffer(Graphics g)
 		{
-			if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
+			var viewMatrix = camera.GetViewMatrix();
 
-			float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
+			// Сортируем только видимые полиэдры по удаленности от камеры
+			var sortedPolyhedrons = allPolyhedrons
+				.Where(p => p.IsVisible)
+				.OrderByDescending(p =>
+				{
+					var center = p.GetCenter();
+					var viewCenter = new Point3D(center.X, center.Y, center.Z);
+					viewCenter.Transform(viewMatrix);
+					return viewCenter.Z;
+				})
+				.ToList();
 
-			using (Pen pen = new Pen(Color.Black, 2))
+			foreach (var poly in sortedPolyhedrons)
 			{
-				foreach (var face in currentPolyhedron.Faces)
+				poly.DrawWithZBuffer(g, camera, viewport, pictureBox1.Width, pictureBox1.Height);
+			}
+		}
+
+		// добавляем проверку видимости
+		private void DrawWithoutZBuffer(Graphics g)
+		{
+			DrawCoordinateAxes(g);
+
+			foreach (var poly in allPolyhedrons.Where(p => p.IsVisible))
+			{
+				DrawPolyherdon(g, poly, pictureBox1.Width, pictureBox1.Height);
+			}
+		}
+
+		public void DrawPolyherdon(Graphics g, Polyhedron polyhedron, int screenWidth, int screenHeight)
+		{
+			if (polyhedron == null || !polyhedron.IsVisible) return;
+			if (polyhedron.Vertices.Count == 0 || polyhedron.Faces.Count == 0) return;
+
+			// Используем цвет из полиэдра
+			using (Pen pen = new Pen(polyhedron.Color, 2))
+			{
+				foreach (var face in polyhedron.Faces)
 				{
 					if (face.Count < 2) continue;
 
@@ -88,10 +157,10 @@ namespace lab6
 
 					for (int i = 0; i < face.Count; i++)
 					{
-						var vertex = currentPolyhedron.Vertices[face[i]];
+						var vertex = polyhedron.Vertices[face[i]];
 						points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
 
-						if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+						if (Math.Abs(points[i].X) > float.MaxValue / 2 || Math.Abs(points[i].Y) > float.MaxValue / 2)
 						{
 							validFace = false;
 							break;
@@ -100,34 +169,25 @@ namespace lab6
 
 					if (validFace)
 					{
-						try
-						{
-							g.DrawPolygon(pen, points);
-						}
-						catch (Exception)
-						{
-
-						}
+						g.DrawPolygon(pen, points);
 					}
 				}
 			}
 
-			foreach (var vertex in currentPolyhedron.Vertices)
+			// Отрисовка вершин (опционально)
+			foreach (var vertex in polyhedron.Vertices)
 			{
 				var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
-				if (Math.Abs(screenPoint.X) <= maxCoord && Math.Abs(screenPoint.Y) <= maxCoord)
+				try
 				{
-					try
-					{
-						g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
-					}
-					catch (Exception)
-					{
-					}
+					g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
+				}
+				catch (Exception)
+				{
+					// Игнорируем ошибки отрисовки
 				}
 			}
 		}
-
 
 
 		private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
@@ -207,15 +267,16 @@ namespace lab6
 		private void DrawInfo(Graphics g)
 		{
 			string projection = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-			 ? "Аксонометрическая"
-			 : "Перспективная";
+			 ? "Аксонометрическая" : "Перспективная";
+
+			string zBufferInfo = viewport.IsZBufferEnabled() ? " | Z-буфер: Вкл" : " | Z-буфер: Выкл";
+			string selectedObjInfo = currentPolyhedron != null ? $" | Объект: {currentPolyhedron.Name}" : "";
+			string objectsCount = $" | Объектов: {allPolyhedrons.Count}";
 
 			string modelInfo = currentPolyhedron != null ?
-			   $" | Вершин: {currentPolyhedron.Vertices.Count} | Граней: {currentPolyhedron.Faces.Count}" :
-			   "";
-			string modelName = currentPolyhedron?.Name != null ? $"Имя: {currentPolyhedron.Name} | " : "";
+			   $" | Вершин: {currentPolyhedron.Vertices.Count} | Граней: {currentPolyhedron.Faces.Count}" : "";
 
-			string info = $"{modelName}Проекция: {projection} | Масштаб: {viewport.Scale:F2}x{modelInfo}";
+			string info = $"Проекция: {projection}{zBufferInfo}{selectedObjInfo}{objectsCount}{modelInfo}";
 
 			g.DrawString(info, Font, Brushes.Black, 10, pictureBox1.Height - 30);
 		}
@@ -340,43 +401,46 @@ namespace lab6
 			pictureBox1.Invalidate();
 		}
 
-
-
-		private void ButtonOct_Click(object sender, EventArgs e)
-		{
-			currentPolyhedron = polyhedrons[2];
-			objectRotation.MakeIdentity();
-			pictureBox1.Invalidate();
-
-		}
-
 		private void ButtonTetr_Click(object sender, EventArgs e)
 		{
-			currentPolyhedron = polyhedrons[0];
-			objectRotation.MakeIdentity();
-			pictureBox1.Invalidate();
-
+			TogglePolyhedronVisibility(0);
 		}
 
 		private void ButtonGex_Click(object sender, EventArgs e)
 		{
-			currentPolyhedron = polyhedrons[1];
-			objectRotation.MakeIdentity();
-			pictureBox1.Invalidate();
+			TogglePolyhedronVisibility(1);
+		}
+
+		private void ButtonOct_Click(object sender, EventArgs e)
+		{
+			TogglePolyhedronVisibility(2);
 		}
 
 		private void ButtonIco_Click(object sender, EventArgs e)
 		{
-			currentPolyhedron = polyhedrons[3];
-			objectRotation.MakeIdentity();
-			pictureBox1.Invalidate();
+			TogglePolyhedronVisibility(3);
 		}
 
 		private void ButtonDod_Click(object sender, EventArgs e)
 		{
-			currentPolyhedron = polyhedrons[4];
-			objectRotation.MakeIdentity();
-			pictureBox1.Invalidate();
+			TogglePolyhedronVisibility(4);
+		}
+
+		// Новый метод для переключения видимости полиэдра
+		private void TogglePolyhedronVisibility(int index)
+		{
+			if (index >= 0 && index < allPolyhedrons.Count)
+			{
+				// Переключаем видимость выбранного полиэдра
+				allPolyhedrons[index].IsVisible = !allPolyhedrons[index].IsVisible;
+
+				// Устанавливаем его как текущий (для операций трансформации)
+				selectedPolyhedronIndex = index;
+				currentPolyhedron = allPolyhedrons[index];
+
+				pictureBox1.Invalidate();
+
+			}
 		}
 
 		private void ComboBoxReflection_SelectedIndexChanged(object sender, EventArgs e)
@@ -579,6 +643,55 @@ namespace lab6
 					pictureBox1.Invalidate();
 				}
 			}
+		}
+
+
+
+
+		//------------------------------------------------------------------------------------------
+		// Кнопка копирования объекта
+		private void ButtonCopyObject_Click(object sender, EventArgs e)
+		{
+			if (currentPolyhedron != null)
+			{
+				var copy = currentPolyhedron.Clone();
+				// Смещаем копию для видимости
+				copy.Transform(Matrix4x4.CreateTranslation(2, 2, 0));
+				allPolyhedrons.Add(copy);
+				polyhedrons.Add(copy); // для обратной совместимости
+
+				selectedPolyhedronIndex = allPolyhedrons.Count - 1;
+				currentPolyhedron = copy;
+				pictureBox1.Invalidate();
+			}
+		}
+
+		// Кнопка переключения Z-буфера
+		private void ButtonToggleZBuffer_Click(object sender, EventArgs e)
+		{
+			viewport.EnableZBuffer(!viewport.IsZBufferEnabled());
+			//buttonToggleZBuffer.Text = viewport.IsZBufferEnabled() ? "Z-буфер: Вкл" : "Z-буфер: Выкл";
+			pictureBox1.Invalidate();
+		}
+
+		// Кнопка следующего объекта
+		private void ButtonNextObject_Click(object sender, EventArgs e)
+		{
+			if (allPolyhedrons.Count == 0) return;
+
+			selectedPolyhedronIndex = (selectedPolyhedronIndex + 1) % allPolyhedrons.Count;
+			currentPolyhedron = allPolyhedrons[selectedPolyhedronIndex];
+			pictureBox1.Invalidate();
+		}
+
+		// Кнопка предыдущего объекта
+		private void ButtonPrevObject_Click(object sender, EventArgs e)
+		{
+			if (allPolyhedrons.Count == 0) return;
+
+			selectedPolyhedronIndex = (selectedPolyhedronIndex - 1 + allPolyhedrons.Count) % allPolyhedrons.Count;
+			currentPolyhedron = allPolyhedrons[selectedPolyhedronIndex];
+			pictureBox1.Invalidate();
 		}
 	}
 }
