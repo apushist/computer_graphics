@@ -3,13 +3,15 @@ namespace lab6
 {
 	public class Polyhedron
 	{
-		public List<Point3D> Vertices { get; private set; }
-		public List<List<int>> Faces { get; private set; }
+		public string Name { get; set; }
+		public List<Point3D> Vertices { get; set; }
+		public List<List<int>> Faces { get; set; }
 
 		public Polyhedron()
 		{
 			Vertices = new List<Point3D>();
 			Faces = new List<List<int>>();
+			Name = "Unnamed";
 		}
 
 		public Point3D GetCenter()
@@ -38,6 +40,7 @@ namespace lab6
 		public static Polyhedron CreateTetrahedron(double size = 1.0)
 		{
 			var poly = new Polyhedron ();
+			poly.Name = "Тетраэдр";
 			double s = size;
 
 			poly.Vertices.AddRange(
@@ -62,6 +65,8 @@ namespace lab6
 		public static Polyhedron CreateHexahedron(double size = 1.0)
 		{
 			var poly = new Polyhedron();
+			poly.Name = "Гексаэдр";
+
 			double s = size;
 
 			poly.Vertices.AddRange(
@@ -92,6 +97,8 @@ namespace lab6
 		public static Polyhedron CreateOctahedron(double size = 1.0)
 		{
 			var poly = new Polyhedron();
+			poly.Name = "Октаэдр";
+
 			double s = size;
 
 			poly.Vertices.AddRange(
@@ -122,6 +129,8 @@ namespace lab6
 		public static Polyhedron CreateIcosahedron(double size = 1.0)
 		{
 			var poly = new Polyhedron();
+			poly.Name = "Икосаэдр";
+
 			double s = size;
 			// Золотое сечение
 			double phi = (1.0 + Math.Sqrt(5.0)) / 2.0;
@@ -177,6 +186,8 @@ namespace lab6
 		public static Polyhedron CreateDodecaedr(double size = 1.0)
 		{
 			var poly = new Polyhedron ();
+			poly.Name = "Додекаэдр";
+
 			double phi = (1 + Math.Sqrt(5)) / 2;
 			double s = size ;
 
