@@ -35,7 +35,7 @@ namespace lab6
 			points.Clear();
 			polyhedrons.Clear();
 
-			// Создаем все многогранники
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			polyhedrons.Add(Polyhedron.CreateTetrahedron());
 			polyhedrons.Add(Polyhedron.CreateHexahedron());
 			polyhedrons.Add(Polyhedron.CreateOctahedron());
@@ -207,15 +207,15 @@ namespace lab6
 		private void DrawInfo(Graphics g)
 		{
 			string projection = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-				? "Аксонометрическая"
-				: "Перспективная";
+				? "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
+				: "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ";
 
 			string modelInfo = currentPolyhedron != null ?
-			   $" | Вершин: {currentPolyhedron.Vertices.Count} | Граней: {currentPolyhedron.Faces.Count}" :
+			   $" | пїЅпїЅпїЅпїЅпїЅпїЅ: {currentPolyhedron.Vertices.Count} | пїЅпїЅпїЅпїЅпїЅпїЅ: {currentPolyhedron.Faces.Count}" :
 			   "";
-			string modelName = currentPolyhedron?.Name != null ? $"Имя: {currentPolyhedron.Name} | " :"";
+			string modelName = currentPolyhedron?.Name != null ? $"пїЅпїЅпїЅ: {currentPolyhedron.Name} | " :"";
 
-			string info = $"{modelName}Проекция: {projection} | Масштаб: {viewport.Scale:F2}x{modelInfo}";
+			string info = $"{modelName}пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: {projection} | пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: {viewport.Scale:F2}x{modelInfo}";
 
 			g.DrawString(info, Font, Brushes.Black, 10, pictureBox1.Height - 30);
 		}
@@ -334,8 +334,8 @@ namespace lab6
 				: Camera.ProjectionType.Axonometric;
 
 			btnSwitchProjection.Text = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-				? "Перспектива"
-				: "Аксонометрия";
+				? "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
+				: "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ";
 
 			pictureBox1.Invalidate();
 		}
@@ -385,7 +385,7 @@ namespace lab6
 				chosenOption = comboBoxReflection.SelectedItem.ToString().Trim().ToUpperInvariant();
 		}
 
-		//метод отражения
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		private void ButtonRefl_Click(object sender, EventArgs e)
 		{
 			if (currentPolyhedron == null) return;
@@ -395,28 +395,28 @@ namespace lab6
 			pictureBox1.Invalidate();
 		}
 
-		//метод смещения
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		private void ButtonTrans_Click(object sender, EventArgs e)
 		{
 			if (currentPolyhedron == null) return;
 
 			if (!double.TryParse(textBoxTransX.Text, out dx))
 			{
-				MessageBox.Show("Введите корректное число для смещения по X!", "Ошибка ввода",
+				MessageBox.Show("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ X!", "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ",
 					MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
 			if (!double.TryParse(textBoxTransY.Text, out dy))
 			{
-				MessageBox.Show("Введите корректное число для смещения по Y!", "Ошибка ввода",
+				MessageBox.Show("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ Y!", "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ",
 					MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
 			if (!double.TryParse(textBoxTransZ.Text, out dz))
 			{
-				MessageBox.Show("Введите корректное число для смещения по Z!", "Ошибка ввода",
+				MessageBox.Show("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ Z!", "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ",
 					MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
@@ -432,14 +432,14 @@ namespace lab6
 
 			if (!double.TryParse(textBoxAngle.Text, out double angleDeg))
 			{
-				MessageBox.Show("Введите корректный угол!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ!", "пїЅпїЅпїЅпїЅпїЅпїЅ", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
 			string axis = comboBoxRotateAxis.SelectedItem?.ToString();
 			if (string.IsNullOrEmpty(axis))
 			{
-				MessageBox.Show("Выберите ось вращения!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!", "пїЅпїЅпїЅпїЅпїЅпїЅ", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
@@ -461,12 +461,12 @@ namespace lab6
 				case "Z":
 					rotation = Matrix4x4.CreateRotationZ(angle);
 					break;
-				case "Ось (по точкам)":
-					MessageBox.Show("Для этого варианта используйте поля для координат двух точек оси.",
-						"Инфо", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				case "пїЅпїЅпїЅ (пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)":
+					MessageBox.Show("пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ.",
+						"пїЅпїЅпїЅпїЅ", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					return;
 				default:
-					MessageBox.Show("Неизвестная ось!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					MessageBox.Show("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ!", "пїЅпїЅпїЅпїЅпїЅпїЅ", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					return;
 			}
 
@@ -500,7 +500,7 @@ namespace lab6
 		{
 			using OpenFileDialog openFileDialog = new OpenFileDialog();
 			openFileDialog.Filter = "OBJ files (*.obj)|*.obj|All files (*.*)|*.*";
-			openFileDialog.Title = "Загрузить модель OBJ";
+			openFileDialog.Title = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ OBJ";
 
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{
@@ -516,18 +516,18 @@ namespace lab6
 						polyhedrons.Add(currentPolyhedron);
 
 						pictureBox1.Invalidate();
-						MessageBox.Show($"Модель загружена успешно!\nВершин: {currentPolyhedron.Vertices.Count}\nГраней: {currentPolyhedron.Faces.Count}",
-							"Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+						MessageBox.Show($"пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!\nпїЅпїЅпїЅпїЅпїЅпїЅ: {currentPolyhedron.Vertices.Count}\nпїЅпїЅпїЅпїЅпїЅпїЅ: {currentPolyhedron.Faces.Count}",
+							"пїЅпїЅпїЅпїЅпїЅ", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 					else
 					{
-						MessageBox.Show("Файл не содержит корректных данных модели.", "Ошибка",
+						MessageBox.Show("пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.", "пїЅпїЅпїЅпїЅпїЅпїЅ",
 							MessageBoxButtons.OK, MessageBoxIcon.Warning);
 					}
 				}
 				catch (Exception ex)
 				{
-					MessageBox.Show($"Ошибка при загрузке файла: {ex.Message}", "Ошибка",
+					MessageBox.Show($"пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: {ex.Message}", "пїЅпїЅпїЅпїЅпїЅпїЅ",
 						MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			}
@@ -537,14 +537,14 @@ namespace lab6
 		{
 			if (currentPolyhedron == null || currentPolyhedron.Vertices.Count == 0)
 			{
-				MessageBox.Show("Нет модели для сохранения.", "Информация",
+				MessageBox.Show("пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.", "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ",
 					MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
 			}
 
 			using SaveFileDialog saveFileDialog = new SaveFileDialog();
 			saveFileDialog.Filter = "OBJ files (*.obj)|*.obj|All files (*.*)|*.*";
-			saveFileDialog.Title = "Сохранить модель OBJ";
+			saveFileDialog.Title = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ OBJ";
 			saveFileDialog.DefaultExt = "obj";
 
 			if (saveFileDialog.ShowDialog() == DialogResult.OK)
@@ -552,12 +552,12 @@ namespace lab6
 				try
 				{
 					ObjFileHandler.SaveToFile(currentPolyhedron, saveFileDialog.FileName);
-					MessageBox.Show($"Модель сохранена успешно!\nВершин: {currentPolyhedron.Vertices.Count}\nГраней: {currentPolyhedron.Faces.Count}",
-						"Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					MessageBox.Show($"пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!\nпїЅпїЅпїЅпїЅпїЅпїЅ: {currentPolyhedron.Vertices.Count}\nпїЅпїЅпїЅпїЅпїЅпїЅ: {currentPolyhedron.Faces.Count}",
+						"пїЅпїЅпїЅпїЅпїЅ", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				}
 				catch (Exception ex)
 				{
-					MessageBox.Show($"Ошибка при сохранении файла: {ex.Message}", "Ошибка",
+					MessageBox.Show($"пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: {ex.Message}", "пїЅпїЅпїЅпїЅпїЅпїЅ",
 						MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			}

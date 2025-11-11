@@ -300,5 +300,45 @@ namespace lab6
 
 			return poly;
 		}
-	}
+
+        public static Polyhedron CreateFunctionSurface(Func<double, double, double> function,
+            double xMin, double xMax, double yMin, double yMax, int steps)
+        {
+            var poly = new Polyhedron();
+            var vertices = new List<Point3D>();
+            var faces = new List<List<int>>();
+
+            double xStep = (xMax - xMin) / steps;
+            double yStep = (yMax - yMin) / steps;
+
+            for (int i = 0; i <= steps; i++)
+            {
+                for (int j = 0; j <= steps; j++)
+                {
+                    double x = xMin + i * xStep;
+                    double y = yMin + j * yStep;
+                    double z = function(x, y);
+                    vertices.Add(new Point3D(x, y, z));
+                }
+            }
+
+            for (int i = 0; i < steps; i++)
+            {
+                for (int j = 0; j < steps; j++)
+                {
+                    int v1 = i * (steps + 1) + j;
+                    int v2 = v1 + 1;
+                    int v3 = (i + 1) * (steps + 1) + j + 1;
+                    int v4 = (i + 1) * (steps + 1) + j;
+
+                    faces.Add(new List<int> { v1, v2, v3 });
+                    faces.Add(new List<int> { v1, v3, v4 });
+                }
+            }
+
+            poly.Vertices = vertices;
+            poly.Faces = faces;
+            return poly;
+        }
+    }
 }

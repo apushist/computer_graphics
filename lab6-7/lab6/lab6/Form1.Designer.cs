@@ -519,6 +519,17 @@
 			buttonFigRotate.UseVisualStyleBackColor = true;
 			buttonFigRotate.Click += ButtonFigRotate_Click;
 			// 
+            // ButtonFunctionGraph
+            // 
+            ButtonFunctionGraph.Location = new Point(183, 46);
+            ButtonFunctionGraph.Name = "ButtonFunctionGraph";
+            ButtonFunctionGraph.Size = new Size(174, 39);
+            ButtonFunctionGraph.TabIndex = 12;
+            ButtonFunctionGraph.Text = "Поверхность функции";
+            ButtonFunctionGraph.UseVisualStyleBackColor = true;
+            ButtonFunctionGraph.Click += ButtonFunctionGraph_Click;
+            //
+			// 
 			// Form1
 			// 
 			AutoScaleDimensions = new SizeF(10F, 25F);
@@ -575,6 +586,7 @@
         private Button buttonRotate;
         private Button buttonRotateAroundAxis;
         private Button buttonFigRotate;
+		private Button ButtonFunctionGraph;
 		private Button buttonLoad;
 		private Button buttonSave;
 	}
