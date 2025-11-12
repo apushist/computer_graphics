@@ -1,4 +1,6 @@
-﻿namespace lab6
+﻿using System.Numerics;
+
+namespace lab6
 {
     public class Camera
     {
@@ -13,6 +15,8 @@
 
         public double RotateX { get; set; } = 30.0;
         public double RotateY { get; set; } = 45.0;
+        public Vector3 Position { get; set; } = new Vector3(0, 0, 5);
+        public Vector3 Target { get; set; } = new Vector3(0, 0, 0);
 
         public Camera()
         {
@@ -73,37 +77,5 @@
             RotateY += deltaX * 0.5;
             RotateX += deltaY * 0.5;
         }
-
-		public Point3D ViewDirection { get; set; } = new Point3D(0, 0, -1);
-
-		public Matrix4x4 GetViewMatrix()
-		{
-			return Matrix4x4.CreateTranslation(0, 0, -5);
-		}
-
-		public double CalculateDepth(Point3D point, Matrix4x4 viewMatrix)
-		{
-			Point3D viewPoint = new Point3D(point.X, point.Y, point.Z);
-			viewPoint.Transform(viewMatrix);
-			return viewPoint.Z;
-		}
-
-		public Point3D GetViewDirection()
-		{
-			// Для аксонометрической проекции - фиксированное направление
-			if (CurrentProjection == ProjectionType.Axonometric)
-			{
-				Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
-				Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
-				Point3D direction = new Point3D(0, 0, -1);
-				direction.Transform(rotationY * rotationX);
-				return direction;
-			}
-			else
-			{
-				// Для перспективной - направление от камеры
-				return new Point3D(0, 0, -1);
-			}
-		}
-	}
+    }
 }
