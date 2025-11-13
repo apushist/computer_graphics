@@ -81,12 +81,10 @@ namespace lab6
 
             using (Pen pen = new Pen(Color.Black, 2))
             {
-                // Матрица вращения камеры
                 Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
                 Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
                 Matrix4x4 rotationMatrix = rotY * rotX;
 
-                // Вектор обзора
                 Vector3 view;
                 if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
                 {
@@ -94,7 +92,7 @@ namespace lab6
                 }
                 else
                 {
-                    view = new Vector3(0, 0, -1); // параллельная проекция
+                    view = new Vector3(0, 0, -1);
                 }
 
                 foreach (var face in currentPolyhedron.Faces)
@@ -119,7 +117,6 @@ namespace lab6
                     if (!validFace)
                         continue;
 
-                    // Вычисляем нормаль грани
                     var v0 = currentPolyhedron.Vertices[face[0]];
                     var v1 = currentPolyhedron.Vertices[face[1]];
                     var v2 = currentPolyhedron.Vertices[face[2]];
@@ -129,17 +126,15 @@ namespace lab6
 
                     var normal = Vector3.Cross(a, b);
 
-                    // Преобразуем нормаль для аксонометрии
                     Vector3 transformedNormal = normal;
                     if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
                     {
                         transformedNormal = rotationMatrix.TransformVector(normal);
                     }
 
-                    // Скалярное произведение с вектором обзора
                     float dot = Vector3.Dot(transformedNormal, view);
 
-                    if (dot >= 0) // грань обращена от камеры
+                    if (dot >= 0)
                         continue;
 
                     try
@@ -150,7 +145,6 @@ namespace lab6
                 }
             }
 
-            // Рисуем вершины
             foreach (var vertex in currentPolyhedron.Vertices)
             {
                 var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
@@ -164,7 +158,6 @@ namespace lab6
                 }
             }
         }
-
 
 
         private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
