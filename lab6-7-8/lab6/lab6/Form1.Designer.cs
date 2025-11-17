@@ -49,6 +49,7 @@
 			label2 = new Label();
 			label3 = new Label();
 			panel1 = new Panel();
+			buttonZB = new Button();
 			buttonRotateAroundAxis = new Button();
 			comboBoxReflection = new ComboBox();
 			label8 = new Label();
@@ -67,7 +68,6 @@
 			buttonSave = new Button();
 			buttonLoad = new Button();
 			buttonFigRotate = new Button();
-			buttonZB = new Button();
 			((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
 			panel1.SuspendLayout();
 			tableLayoutPanel1.SuspendLayout();
@@ -320,6 +320,18 @@
 			panel1.Size = new Size(161, 474);
 			panel1.TabIndex = 12;
 			// 
+			// buttonZB
+			// 
+			buttonZB.Font = new Font("Segoe UI", 11F);
+			buttonZB.Location = new Point(4, 145);
+			buttonZB.Margin = new Padding(4, 3, 4, 3);
+			buttonZB.Name = "buttonZB";
+			buttonZB.Size = new Size(153, 27);
+			buttonZB.TabIndex = 26;
+			buttonZB.Text = "Z-буфер";
+			buttonZB.UseVisualStyleBackColor = true;
+			buttonZB.Click += buttonZB_Click;
+			// 
 			// buttonRotateAroundAxis
 			// 
 			buttonRotateAroundAxis.Font = new Font("Segoe UI", 10F);
@@ -528,18 +540,6 @@
 			buttonFigRotate.UseVisualStyleBackColor = true;
 			buttonFigRotate.Click += ButtonFigRotate_Click;
 			// 
-			// buttonZB
-			// 
-			buttonZB.Font = new Font("Segoe UI", 11F);
-			buttonZB.Location = new Point(4, 145);
-			buttonZB.Margin = new Padding(4, 3, 4, 3);
-			buttonZB.Name = "buttonZB";
-			buttonZB.Size = new Size(153, 27);
-			buttonZB.TabIndex = 26;
-			buttonZB.Text = "Z-буфер";
-			buttonZB.UseVisualStyleBackColor = true;
-			buttonZB.Click += buttonZB_Click;
-			// 
 			// Form1
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
@@ -550,7 +550,7 @@
 			Controls.Add(pictureBox1);
 			Margin = new Padding(4, 3, 4, 3);
 			Name = "Form1";
-			Text = "3D Viewer - Лабораторная работа 6";
+			Text = "3D Viewer - Лабораторная работа 8";
 			((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
 			panel1.ResumeLayout(false);
 			panel1.PerformLayout();
