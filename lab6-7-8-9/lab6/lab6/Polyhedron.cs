@@ -6,6 +6,10 @@ namespace lab6
 		public string Name { get; set; }
 		public List<Point3D> Vertices { get; set; }
 		public List<List<int>> Faces { get; set; }
+		public List<VertexNormal> Normals { get; set; } = new List<VertexNormal>();
+		public List<List<int>> NormalIndices { get; set; } = new List<List<int>>();
+		public Material Material { get; set; } = new Material();
+
 
 		public Polyhedron()
 		{
@@ -340,5 +344,55 @@ namespace lab6
             poly.Faces = faces;
             return poly;
         }
-    }
+		public void CalculateVertexNormals()
+		{
+			Normals.Clear();
+
+			for (int i = 0; i < Vertices.Count; i++)
+			{
+				Normals.Add(new VertexNormal(0, 0, 0));
+			}
+
+			foreach (var face in Faces)
+			{
+				if (face.Count < 3) continue;
+
+				var v0 = Vertices[face[0]];
+				var v1 = Vertices[face[1]];
+				var v2 = Vertices[face[2]];
+
+				var edge1 = new Point3D(v1.X - v0.X, v1.Y - v0.Y, v1.Z - v0.Z, 0);
+				var edge2 = new Point3D(v2.X - v0.X, v2.Y - v0.Y, v2.Z - v0.Z, 0);
+
+				var faceNormal = Point3D.CrossProduct(edge1, edge2);
+				double length = faceNormal.Length();
+				if (length > 0)
+				{
+					faceNormal.X /= length;
+					faceNormal.Y /= length;
+					faceNormal.Z /= length;
+				}
+
+				foreach (int vertexIndex in face)
+				{
+					Normals[vertexIndex].X += faceNormal.X;
+					Normals[vertexIndex].Y += faceNormal.Y;
+					Normals[vertexIndex].Z += faceNormal.Z;
+				}
+			}
+
+			foreach (var normal in Normals)
+			{
+				normal.Normalize();
+			}
+		}
+
+		public void TransformNormals(Matrix4x4 matrix)
+		{
+			for (int i = 0; i < Normals.Count; i++)
+			{
+				Normals[i] = matrix.TransformNormal(Normals[i]);
+			}
+		}
+	}
 }

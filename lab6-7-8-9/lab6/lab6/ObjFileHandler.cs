@@ -17,11 +17,15 @@ namespace lab6
 			var vertices = new List<Point3D>();
 			var faces = new List<List<int>>();
 
+			
+			var vertexNormals = new List<VertexNormal>();
+			var faceNormalIndices = new List<List<int>>();
+
 			//параметры существующие в файле, но пока что не использующиеся в нашем проекте.
 			//Нужны для освещения и т п, так что пусть будут тут для следующих лаб
-			var textureVertices = new List<Point3D>();
-			var vertexNormals = new List<Point3D>();
 			var parameterVertices = new List<Point3D>();
+			var textureVertices = new List<Point3D>();
+
 
 			try
 			{
@@ -62,7 +66,7 @@ namespace lab6
 									double.TryParse(parts[2], out double y) &&
 									double.TryParse(parts[3], out double z))
 								{
-									vertexNormals.Add(new Point3D(x, y, z));
+									vertexNormals.Add(new VertexNormal(x, y, z));
 								}
 							}
 							break;
@@ -97,6 +101,8 @@ namespace lab6
 							if (parts.Length >= 4)
 							{
 								var faceIndices = new List<int>();
+								var normalIndices = new List<int>();
+
 								for (int i = 1; i < parts.Length; i++)
 								{
 									var vertexParts = parts[i].Split('/');
@@ -104,10 +110,20 @@ namespace lab6
 									{
 										faceIndices.Add(vertexIndex - 1);
 									}
+
+									if (vertexParts.Length >= 3 && int.TryParse(vertexParts[2], out int normalIndex))
+									{
+										normalIndices.Add(normalIndex - 1);
+									}
+									else
+									{
+										normalIndices.Add(-1);
+									}
 								}
 								if (faceIndices.Count >= 3)
 								{
 									faces.Add(faceIndices);
+									faceNormalIndices.Add(normalIndices);
 								}
 							}
 							break;
@@ -116,6 +132,14 @@ namespace lab6
 
 				polyhedron.Vertices = vertices;
 				polyhedron.Faces = faces;
+				polyhedron.Normals = vertexNormals;
+				polyhedron.NormalIndices = faceNormalIndices;
+
+				// Если нормали не были загружены из файла, вычисляем их
+				if (polyhedron.Normals.Count == 0)
+				{
+					polyhedron.CalculateVertexNormals();
+				}
 			}
 			catch (Exception ex)
 			{

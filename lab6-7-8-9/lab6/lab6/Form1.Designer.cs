@@ -550,7 +550,7 @@
 			Controls.Add(pictureBox1);
 			Margin = new Padding(4, 3, 4, 3);
 			Name = "Form1";
-			Text = "3D Viewer - Лабораторная работа 8";
+			Text = "3D Viewer - Лабораторная работа 9";
 			((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
 			panel1.ResumeLayout(false);
 			panel1.PerformLayout();

@@ -220,5 +220,16 @@ namespace lab6
             float z = (float)(v.X * data[2, 0] + v.Y * data[2, 1] + v.Z * data[2, 2] + data[2, 3]);
             return new Vector3(x, y, z);
         }
-    }
+
+		public VertexNormal TransformNormal(VertexNormal normal)
+		{
+			double x = data[0, 0] * normal.X + data[0, 1] * normal.Y + data[0, 2] * normal.Z;
+			double y = data[1, 0] * normal.X + data[1, 1] * normal.Y + data[1, 2] * normal.Z;
+			double z = data[2, 0] * normal.X + data[2, 1] * normal.Y + data[2, 2] * normal.Z;
+
+			VertexNormal result = new VertexNormal(x, y, z);
+			result.Normalize();
+			return result;
+		}
+	}
 }

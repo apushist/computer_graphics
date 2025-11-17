@@ -21,6 +21,8 @@ namespace lab6
 		private ZBuffer zBuffer;
 		private bool backfaceCullingEnabled = false;
 		private bool zBufferEnabled = false;
+		private LightSource lightSource = new LightSource();
+		private bool shadingEnabled = false;
 
 		public Point3D AxisPointA { get; set; } = null;
 		public Point3D AxisPointB { get; set; } = null;
@@ -80,6 +82,11 @@ namespace lab6
 		{
 			if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
 
+			if (currentPolyhedron.Normals.Count == 0)
+			{
+				currentPolyhedron.CalculateVertexNormals();
+			}
+
 			if (zBufferEnabled)
 			{
 				if (zBuffer == null || screenWidth != zBuffer.Width || screenHeight != zBuffer.Height)
@@ -92,7 +99,6 @@ namespace lab6
 			float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
 
 			using (Pen pen = new Pen(Color.Black, 2))
-			using (Brush faceBrush = new SolidBrush(Color.FromArgb(100, 200, 200, 255)))
 			{
 				Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
 				Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
@@ -155,54 +161,51 @@ namespace lab6
 						if (dot >= 0) continue;
 					}
 
-					var points = new PointF[face.Count];
-					bool validFace = true;
-
-					for (int i = 0; i < face.Count; i++)
+					Color faceColor;
+					if (shadingEnabled)
 					{
-						var vertex = currentPolyhedron.Vertices[face[i]];
-						points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
-
-						if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
-						{
-							validFace = false;
-							break;
-						}
+						faceColor = CalculateFaceColor(face, rotationMatrix);
+					}
+					else
+					{
+						faceColor = currentPolyhedron.Material.DiffuseColor;
 					}
 
-					if (!validFace) continue;
+					using (Brush faceBrush = new SolidBrush(faceColor))
+					{
+						var points = new PointF[face.Count];
+						bool validFace = true;
 
-					try
-					{
-						if (zBufferEnabled)
+						for (int i = 0; i < face.Count; i++)
 						{
-							DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
-						}
-						else
-						{
-							g.FillPolygon(faceBrush, points);
-							g.DrawPolygon(pen, points);
-						}
-					}
-					catch (Exception ex)
-					{
-						Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
-					}
-				}
-			}
+							var vertex = currentPolyhedron.Vertices[face[i]];
+							points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
 
-			if (!zBufferEnabled)
-			{
-				foreach (var vertex in currentPolyhedron.Vertices)
-				{
-					var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
-					if (Math.Abs(screenPoint.X) <= maxCoord && Math.Abs(screenPoint.Y) <= maxCoord)
-					{
+							if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+							{
+								validFace = false;
+								break;
+							}
+						}
+
+						if (!validFace) continue;
+
 						try
 						{
-							g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
+							if (zBufferEnabled)
+							{
+								DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
+							}
+							else
+							{
+								g.FillPolygon(faceBrush, points);
+								g.DrawPolygon(pen, points);
+							}
 						}
-						catch { }
+						catch (Exception ex)
+						{
+							Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
+						}
 					}
 				}
 			}
@@ -278,6 +281,48 @@ namespace lab6
 			}
 		}
 
+		// Вычисление цвета грани по модели Ламберта
+		private Color CalculateFaceColor(List<int> face, Matrix4x4 rotationMatrix)
+		{
+			var v0 = currentPolyhedron.Vertices[face[0]];
+			var v1 = currentPolyhedron.Vertices[face[1]];
+			var v2 = currentPolyhedron.Vertices[face[2]];
+
+			var edge1 = new Point3D(v1.X - v0.X, v1.Y - v0.Y, v1.Z - v0.Z, 0);
+			var edge2 = new Point3D(v2.X - v0.X, v2.Y - v0.Y, v2.Z - v0.Z, 0);
+
+			var faceNormal = Point3D.CrossProduct(edge1, edge2);
+			faceNormal.Normalize();
+
+			Vector3 transformedNormal = rotationMatrix.TransformVector(
+				new Vector3((float)faceNormal.X, (float)faceNormal.Y, (float)faceNormal.Z));
+			transformedNormal = Vector3.Normalize(transformedNormal);
+
+			Point3D faceCenter = new Point3D(
+				(v0.X + v1.X + v2.X) / 3,
+				(v0.Y + v1.Y + v2.Y) / 3,
+				(v0.Z + v1.Z + v2.Z) / 3
+			);
+
+			Vector3 lightDirection = lightSource.GetDirectionTo(faceCenter);
+
+			float dot = Vector3.Dot(transformedNormal, lightDirection);
+			dot = Math.Max(0, Math.Min(1, dot));
+
+			float intensity = currentPolyhedron.Material.AmbientIntensity +
+							 currentPolyhedron.Material.DiffuseIntensity * dot;
+			intensity = Math.Max(0, Math.Min(1, intensity));
+
+			Color baseColor = currentPolyhedron.Material.DiffuseColor;
+			int r = (int)(baseColor.R * intensity);
+			int g = (int)(baseColor.G * intensity);
+			int b = (int)(baseColor.B * intensity);
+
+			return Color.FromArgb(200,
+				Math.Min(255, Math.Max(0, r)),
+				Math.Min(255, Math.Max(0, g)),
+				Math.Min(255, Math.Max(0, b)));
+		}
 
 		private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
 		{
@@ -444,6 +489,7 @@ namespace lab6
 			Matrix4x4 rotation = fromOrigin * rotX * rotY * toOrigin;
 
 			currentPolyhedron.Transform(rotation);
+			currentPolyhedron.TransformNormals(rotation);
 
 			objectRotation = rotation * objectRotation;
 		}
@@ -451,8 +497,9 @@ namespace lab6
 		private void ZoomPolyhedron(float scaleFactor)
 		{
 			if (currentPolyhedron == null) return;
-
-			currentPolyhedron.Transform(Matrix4x4.CreateScaleAroundCenter(scaleFactor, currentPolyhedron.GetCenter()));
+			Matrix4x4 mat = Matrix4x4.CreateScaleAroundCenter(scaleFactor, currentPolyhedron.GetCenter());
+			currentPolyhedron.Transform(mat);
+			currentPolyhedron.TransformNormals(mat);
 
 			pictureBox1.Invalidate();
 		}
@@ -540,6 +587,7 @@ namespace lab6
 
 			var matrix = Matrix4x4.CreateReflection(chosenOption);
 			currentPolyhedron.Transform(matrix);
+			currentPolyhedron.TransformNormals(matrix);
 			pictureBox1.Invalidate();
 		}
 
@@ -571,6 +619,7 @@ namespace lab6
 
 			var matrix = Matrix4x4.CreateTranslation(dx, dy, dz);
 			currentPolyhedron.Transform(matrix);
+			currentPolyhedron.TransformNormals(matrix);
 			pictureBox1.Invalidate();
 		}
 
@@ -620,6 +669,7 @@ namespace lab6
 
 			Matrix4x4 result = fromOrigin * rotation * toOrigin;
 			currentPolyhedron.Transform(result);
+			currentPolyhedron.TransformNormals(result);
 			pictureBox1.Invalidate();
 		}
 		private void ButtonRotateAroundAxis_Click(object sender, EventArgs e)
