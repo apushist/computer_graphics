@@ -77,5 +77,33 @@ namespace lab6
             RotateY += deltaX * 0.5;
             RotateX += deltaY * 0.5;
         }
-    }
+
+		public (PointF screenPos, float depth) ProjectTo2DWithDepth(Point3D worldPoint, int screenWidth, int screenHeight, float viewportScale = 1.0f)
+		{
+			Point3D transformed = new Point3D(worldPoint.X, worldPoint.Y, worldPoint.Z);
+
+			Matrix4x4 projection = GetProjectionMatrix();
+			transformed.Transform(projection);
+
+			// Вычисляем глубину как расстояние до камеры
+			float depth = (float)Math.Sqrt(
+				worldPoint.X * worldPoint.X +
+				worldPoint.Y * worldPoint.Y +
+				worldPoint.Z * worldPoint.Z
+			);
+
+			if (transformed.W != 0)
+			{
+				transformed.X /= transformed.W;
+				transformed.Y /= transformed.W;
+				transformed.Z /= transformed.W;
+			}
+
+			float scale = 80f * viewportScale;
+			float x = (float)(transformed.X * scale + screenWidth / 2);
+			float y = (float)(-transformed.Y * scale + screenHeight / 2);
+
+			return (new PointF(x, y), depth);
+		}
+	}
 }

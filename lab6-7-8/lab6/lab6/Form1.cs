@@ -18,6 +18,9 @@ namespace lab6
 		private double dy = 1;
 		private double dz = 1;
 		public PictureBox MainPictureBox => pictureBox1;
+		private ZBuffer zBuffer;
+		private bool backfaceCullingEnabled = false;
+		private bool zBufferEnabled = false;
 
 		public Point3D AxisPointA { get; set; } = null;
 		public Point3D AxisPointB { get; set; } = null;
@@ -73,94 +76,210 @@ namespace lab6
 			}
 		}
 
-        public void DrawPolyherdon(Graphics g, int screenWidth, int screenHeight)
-        {
-            if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
+		public void DrawPolyherdon(Graphics g, int screenWidth, int screenHeight)
+		{
+			if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
 
-            float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
+			if (zBufferEnabled)
+			{
+				if (zBuffer == null || screenWidth != zBuffer.Width || screenHeight != zBuffer.Height)
+				{
+					zBuffer = new ZBuffer(screenWidth, screenHeight);
+				}
+				zBuffer.Clear();
+			}
 
-            using (Pen pen = new Pen(Color.Black, 2))
-            {
-                Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
-                Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
-                Matrix4x4 rotationMatrix = rotY * rotX;
+			float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
 
-                Vector3 view;
-                if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
-                {
-                    view = Vector3.Normalize(camera.Target - camera.Position);
-                }
-                else
-                {
-                    view = new Vector3(0, 0, -1);
-                }
+			using (Pen pen = new Pen(Color.Black, 2))
+			using (Brush faceBrush = new SolidBrush(Color.FromArgb(100, 200, 200, 255)))
+			{
+				Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
+				Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
+				Matrix4x4 rotationMatrix = rotY * rotX;
 
-                foreach (var face in currentPolyhedron.Faces)
-                {
-                    if (face.Count < 3) continue;
+				Vector3 view;
+				if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
+				{
+					view = Vector3.Normalize(camera.Target - camera.Position);
+				}
+				else
+				{
+					view = new Vector3(0, 0, -1);
+				}
 
-                    var points = new PointF[face.Count];
-                    bool validFace = true;
+				var sortedFaces = new List<(List<int> face, double depth)>();
 
-                    for (int i = 0; i < face.Count; i++)
-                    {
-                        var vertex = currentPolyhedron.Vertices[face[i]];
-                        points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+				foreach (var face in currentPolyhedron.Faces)
+				{
+					if (face.Count < 3) continue;
 
-                        if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
-                        {
-                            validFace = false;
-                            break;
-                        }
-                    }
+					double avgDepth = 0;
+					foreach (int vertexIndex in face)
+					{
+						var vertex = currentPolyhedron.Vertices[vertexIndex];
+						avgDepth += Math.Sqrt(vertex.X * vertex.X + vertex.Y * vertex.Y + vertex.Z * vertex.Z);
+					}
+					avgDepth /= face.Count;
 
-                    if (!validFace)
-                        continue;
+					sortedFaces.Add((face, avgDepth));
+				}
 
-                    var v0 = currentPolyhedron.Vertices[face[0]];
-                    var v1 = currentPolyhedron.Vertices[face[1]];
-                    var v2 = currentPolyhedron.Vertices[face[2]];
+				if (!zBufferEnabled)
+				{
+					sortedFaces = sortedFaces.OrderByDescending(f => f.depth).ToList();
+				}
 
-                    var a = new Vector3((float)(v1.X - v0.X), (float)(v1.Y - v0.Y), (float)(v1.Z - v0.Z));
-                    var b = new Vector3((float)(v2.X - v0.X), (float)(v2.Y - v0.Y), (float)(v2.Z - v0.Z));
+				foreach (var (face, depth) in sortedFaces)
+				{
+					if (face.Count < 3) continue;
 
-                    var normal = Vector3.Cross(a, b);
+					if (backfaceCullingEnabled)
+					{
+						var v0 = currentPolyhedron.Vertices[face[0]];
+						var v1 = currentPolyhedron.Vertices[face[1]];
+						var v2 = currentPolyhedron.Vertices[face[2]];
 
-                    Vector3 transformedNormal = normal;
-                    if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
-                    {
-                        transformedNormal = rotationMatrix.TransformVector(normal);
-                    }
+						var a = new Vector3((float)(v1.X - v0.X), (float)(v1.Y - v0.Y), (float)(v1.Z - v0.Z));
+						var b = new Vector3((float)(v2.X - v0.X), (float)(v2.Y - v0.Y), (float)(v2.Z - v0.Z));
 
-                    float dot = Vector3.Dot(transformedNormal, view);
+						var normal = Vector3.Cross(a, b);
+						Vector3 transformedNormal = normal;
 
-                    if (dot >= 0)
-                        continue;
+						if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
+						{
+							transformedNormal = rotationMatrix.TransformVector(normal);
+						}
 
-                    try
-                    {
-                        g.DrawPolygon(pen, points);
-                    }
-                    catch { }
-                }
-            }
+						float dot = Vector3.Dot(transformedNormal, view);
+						if (dot >= 0) continue;
+					}
 
-            foreach (var vertex in currentPolyhedron.Vertices)
-            {
-                var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
-                if (Math.Abs(screenPoint.X) <= maxCoord && Math.Abs(screenPoint.Y) <= maxCoord)
-                {
-                    try
-                    {
-                        g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
-                    }
-                    catch { }
-                }
-            }
-        }
+					var points = new PointF[face.Count];
+					bool validFace = true;
+
+					for (int i = 0; i < face.Count; i++)
+					{
+						var vertex = currentPolyhedron.Vertices[face[i]];
+						points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+
+						if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+						{
+							validFace = false;
+							break;
+						}
+					}
+
+					if (!validFace) continue;
+
+					try
+					{
+						if (zBufferEnabled)
+						{
+							DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
+						}
+						else
+						{
+							g.FillPolygon(faceBrush, points);
+							g.DrawPolygon(pen, points);
+						}
+					}
+					catch (Exception ex)
+					{
+						Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
+					}
+				}
+			}
+
+			if (!zBufferEnabled)
+			{
+				foreach (var vertex in currentPolyhedron.Vertices)
+				{
+					var screenPoint = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+					if (Math.Abs(screenPoint.X) <= maxCoord && Math.Abs(screenPoint.Y) <= maxCoord)
+					{
+						try
+						{
+							g.FillEllipse(Brushes.Black, screenPoint.X - 3, screenPoint.Y - 3, 6, 6);
+						}
+						catch { }
+					}
+				}
+			}
+		}
+
+		private void DrawPolygonWithZBuffer(Graphics g, PointF[] points, List<int> face,
+			int screenWidth, int screenHeight, Brush brush, Pen pen)
+		{
+			if (face.Count < 3) return;
+
+			var vertices = new (PointF pos, float depth)[face.Count];
+			for (int i = 0; i < face.Count; i++)
+			{
+				var vertex = currentPolyhedron.Vertices[face[i]];
+				var projection = camera.ProjectTo2DWithDepth(vertex, screenWidth, screenHeight, viewport.Scale);
+				vertices[i] = (projection.screenPos, projection.depth);
+			}
+
+			for (int i = 1; i < face.Count - 1; i++)
+			{
+				var triangle = new[] { vertices[0], vertices[i], vertices[i + 1] };
+				DrawTriangleWithZBuffer(g, triangle, brush);
+			}
+
+			g.DrawPolygon(pen, vertices.Select(v => v.pos).ToArray());
+		}
+
+		private void DrawTriangleWithZBuffer(Graphics g, (PointF pos, float depth)[] triangle, Brush brush)
+		{
+			if (triangle.Length != 3) return;
+
+			float minX = Math.Min(Math.Min(triangle[0].pos.X, triangle[1].pos.X), triangle[2].pos.X);
+			float maxX = Math.Max(Math.Max(triangle[0].pos.X, triangle[1].pos.X), triangle[2].pos.X);
+			float minY = Math.Min(Math.Min(triangle[0].pos.Y, triangle[1].pos.Y), triangle[2].pos.Y);
+			float maxY = Math.Max(Math.Max(triangle[0].pos.Y, triangle[1].pos.Y), triangle[2].pos.Y);
+
+			int startX = Math.Max(0, (int)Math.Floor(minX));
+			int endX = Math.Min(zBuffer.Width - 1, (int)Math.Ceiling(maxX));
+			int startY = Math.Max(0, (int)Math.Floor(minY));
+			int endY = Math.Min(zBuffer.Height - 1, (int)Math.Ceiling(maxY));
+
+			PointF p0 = triangle[0].pos, p1 = triangle[1].pos, p2 = triangle[2].pos;
+			float z0 = triangle[0].depth, z1 = triangle[1].depth, z2 = triangle[2].depth;
+
+			float det = (p1.Y - p2.Y) * (p0.X - p2.X) + (p2.X - p1.X) * (p0.Y - p2.Y);
+			if (Math.Abs(det) < 1e-10f) return;
+
+			float invDet = 1.0f / det;
+
+			Color color = ((SolidBrush)brush).Color;
+
+			for (int y = startY; y <= endY; y++)
+			{
+				for (int x = startX; x <= endX; x++)
+				{
+					float w0 = ((p1.Y - p2.Y) * (x - p2.X) + (p2.X - p1.X) * (y - p2.Y)) * invDet;
+					float w1 = ((p2.Y - p0.Y) * (x - p2.X) + (p0.X - p2.X) * (y - p2.Y)) * invDet;
+					float w2 = 1.0f - w0 - w1;
+
+					if (w0 >= 0 && w1 >= 0 && w2 >= 0)
+					{
+						float depth = w0 * z0 + w1 * z1 + w2 * z2;
+
+						if (zBuffer.TestAndSet(x, y, depth))
+						{
+							using (var pixelBrush = new SolidBrush(color))
+							{
+								g.FillRectangle(pixelBrush, x, y, 1, 1);
+							}
+						}
+					}
+				}
+			}
+		}
 
 
-        private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
+		private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
 		{
 			try
 			{
@@ -333,7 +452,7 @@ namespace lab6
 		{
 			if (currentPolyhedron == null) return;
 
-			currentPolyhedron.Transform(Matrix4x4.CreateScaleAroundCenter(scaleFactor,currentPolyhedron.GetCenter()));
+			currentPolyhedron.Transform(Matrix4x4.CreateScaleAroundCenter(scaleFactor, currentPolyhedron.GetCenter()));
 
 			pictureBox1.Invalidate();
 		}
@@ -364,7 +483,7 @@ namespace lab6
 				: Camera.ProjectionType.Axonometric;
 
 			btnSwitchProjection.Text = camera.CurrentProjection == Camera.ProjectionType.Axonometric
-				  ? "Перспектива" 
+				  ? "Перспектива"
 				  : "Аксонометрия";
 
 			pictureBox1.Invalidate();
@@ -424,7 +543,7 @@ namespace lab6
 			pictureBox1.Invalidate();
 		}
 
-		
+
 		private void ButtonTrans_Click(object sender, EventArgs e)
 		{
 			if (currentPolyhedron == null) return;
@@ -609,6 +728,21 @@ namespace lab6
 					pictureBox1.Invalidate();
 				}
 			}
+		}
+
+		private void buttonZB_Click(object sender, EventArgs e)
+		{
+			zBufferEnabled = !zBufferEnabled;
+			backfaceCullingEnabled = !backfaceCullingEnabled;
+			if (zBufferEnabled && zBuffer == null)
+			{
+				zBuffer = new ZBuffer(pictureBox1.Width, pictureBox1.Height);
+			}
+			else
+			{
+				zBuffer.Clear();
+			}
+			pictureBox1.Invalidate();
 		}
 	}
 }
