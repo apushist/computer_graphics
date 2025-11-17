@@ -4,7 +4,7 @@ namespace lab6
 {
 	public class LightSource
 	{
-		public Point3D Position { get; set; } = new Point3D(5, 5, 5);
+		public Point3D Position { get; set; } = new Point3D(3,3,3);
 		public Color Color { get; set; } = Color.White;
 		public float Intensity { get; set; } = 1.0f;
 

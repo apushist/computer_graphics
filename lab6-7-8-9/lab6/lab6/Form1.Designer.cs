@@ -49,6 +49,8 @@
 			label2 = new Label();
 			label3 = new Label();
 			panel1 = new Panel();
+			buttonLighting = new Button();
+			buttonShading = new Button();
 			buttonZB = new Button();
 			buttonRotateAroundAxis = new Button();
 			comboBoxReflection = new ComboBox();
@@ -80,7 +82,7 @@
 			pictureBox1.Location = new Point(-3, 71);
 			pictureBox1.Margin = new Padding(4, 3, 4, 3);
 			pictureBox1.Name = "pictureBox1";
-			pictureBox1.Size = new Size(790, 403);
+			pictureBox1.Size = new Size(790, 499);
 			pictureBox1.TabIndex = 0;
 			pictureBox1.TabStop = false;
 			pictureBox1.Paint += PictureBox1_Paint;
@@ -115,9 +117,10 @@
 			// 
 			// btnResetView
 			// 
+			btnResetView.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 			btnResetView.BackColor = Color.RosyBrown;
 			btnResetView.Font = new Font("Segoe UI", 11F);
-			btnResetView.Location = new Point(1, 444);
+			btnResetView.Location = new Point(2, 540);
 			btnResetView.Margin = new Padding(4, 3, 4, 3);
 			btnResetView.Name = "btnResetView";
 			btnResetView.Size = new Size(155, 27);
@@ -291,6 +294,8 @@
 			// panel1
 			// 
 			panel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+			panel1.Controls.Add(buttonLighting);
+			panel1.Controls.Add(buttonShading);
 			panel1.Controls.Add(buttonZB);
 			panel1.Controls.Add(buttonRotateAroundAxis);
 			panel1.Controls.Add(comboBoxReflection);
@@ -317,8 +322,32 @@
 			panel1.Location = new Point(791, 0);
 			panel1.Margin = new Padding(3, 2, 3, 2);
 			panel1.Name = "panel1";
-			panel1.Size = new Size(161, 474);
+			panel1.Size = new Size(161, 570);
 			panel1.TabIndex = 12;
+			// 
+			// buttonLighting
+			// 
+			buttonLighting.Font = new Font("Segoe UI", 10F);
+			buttonLighting.Location = new Point(4, 500);
+			buttonLighting.Margin = new Padding(4, 3, 4, 3);
+			buttonLighting.Name = "buttonLighting";
+			buttonLighting.Size = new Size(150, 27);
+			buttonLighting.TabIndex = 28;
+			buttonLighting.Text = "Настройки света";
+			buttonLighting.UseVisualStyleBackColor = true;
+			buttonLighting.Click += buttonLighting_Click;
+			// 
+			// buttonShading
+			// 
+			buttonShading.Font = new Font("Segoe UI", 10F);
+			buttonShading.Location = new Point(4, 434);
+			buttonShading.Margin = new Padding(4, 3, 4, 3);
+			buttonShading.Name = "buttonShading";
+			buttonShading.Size = new Size(150, 60);
+			buttonShading.TabIndex = 27;
+			buttonShading.Text = "Переключить затенение";
+			buttonShading.UseVisualStyleBackColor = true;
+			buttonShading.Click += buttonShading_Click;
 			// 
 			// buttonZB
 			// 
@@ -544,7 +573,7 @@
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(952, 474);
+			ClientSize = new Size(952, 570);
 			Controls.Add(tableLayoutPanel1);
 			Controls.Add(panel1);
 			Controls.Add(pictureBox1);
@@ -600,5 +629,7 @@
 		private Button buttonSave;
 		private Button buttonFunctionGraph;
 		private Button buttonZB;
+		private Button buttonLighting;
+		private Button buttonShading;
 	}
 }

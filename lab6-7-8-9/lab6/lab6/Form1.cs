@@ -293,11 +293,6 @@ namespace lab6
 
 			var faceNormal = Point3D.CrossProduct(edge1, edge2);
 			faceNormal.Normalize();
-
-			Vector3 transformedNormal = rotationMatrix.TransformVector(
-				new Vector3((float)faceNormal.X, (float)faceNormal.Y, (float)faceNormal.Z));
-			transformedNormal = Vector3.Normalize(transformedNormal);
-
 			Point3D faceCenter = new Point3D(
 				(v0.X + v1.X + v2.X) / 3,
 				(v0.Y + v1.Y + v2.Y) / 3,
@@ -306,7 +301,10 @@ namespace lab6
 
 			Vector3 lightDirection = lightSource.GetDirectionTo(faceCenter);
 
-			float dot = Vector3.Dot(transformedNormal, lightDirection);
+			Vector3 worldNormal = new Vector3((float)faceNormal.X, (float)faceNormal.Y, (float)faceNormal.Z);
+			float dot = Vector3.Dot(worldNormal, lightDirection);
+
+
 			dot = Math.Max(0, Math.Min(1, dot));
 
 			float intensity = currentPolyhedron.Material.AmbientIntensity +
@@ -326,54 +324,49 @@ namespace lab6
 
 		private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
 		{
-			try
+			float maxX = pictureBox1.Width * 2f;
+			float maxY = pictureBox1.Height * 2f;
+
+			if (Math.Abs(start.X) > maxX || Math.Abs(start.Y) > maxY ||
+				Math.Abs(end.X) > maxX || Math.Abs(end.Y) > maxY)
 			{
-				float maxX = pictureBox1.Width * 2f;
-				float maxY = pictureBox1.Height * 2f;
+				return;
+			}
 
-				if (Math.Abs(start.X) > maxX || Math.Abs(start.Y) > maxY ||
-					Math.Abs(end.X) > maxX || Math.Abs(end.Y) > maxY)
+			using (Pen pen = new Pen(color, 2))
+			{
+				g.DrawLine(pen, start, end);
+			}
+
+			float dx = end.X - start.X;
+			float dy = end.Y - start.Y;
+			float length = (float)Math.Sqrt(dx * dx + dy * dy);
+
+			if (length > 0)
+			{
+				dx /= length;
+				dy /= length;
+
+				float arrowSize = 10f;
+				float angle = (float)(Math.PI / 6);
+
+				float leftX = end.X - arrowSize * (float)Math.Cos(angle) * dx + arrowSize * (float)Math.Sin(angle) * dy;
+				float leftY = end.Y - arrowSize * (float)Math.Cos(angle) * dy - arrowSize * (float)Math.Sin(angle) * dx;
+
+				float rightX = end.X - arrowSize * (float)Math.Cos(angle) * dx - arrowSize * (float)Math.Sin(angle) * dy;
+				float rightY = end.Y - arrowSize * (float)Math.Cos(angle) * dy + arrowSize * (float)Math.Sin(angle) * dx;
+
+				if (Math.Abs(leftX) <= maxX && Math.Abs(leftY) <= maxY &&
+					Math.Abs(rightX) <= maxX && Math.Abs(rightY) <= maxY)
 				{
-					return;
-				}
-
-				using (Pen pen = new Pen(color, 2))
-				{
-					g.DrawLine(pen, start, end);
-				}
-
-				float dx = end.X - start.X;
-				float dy = end.Y - start.Y;
-				float length = (float)Math.Sqrt(dx * dx + dy * dy);
-
-				if (length > 0)
-				{
-					dx /= length;
-					dy /= length;
-
-					float arrowSize = 10f;
-					float angle = (float)(Math.PI / 6);
-
-					float leftX = end.X - arrowSize * (float)Math.Cos(angle) * dx + arrowSize * (float)Math.Sin(angle) * dy;
-					float leftY = end.Y - arrowSize * (float)Math.Cos(angle) * dy - arrowSize * (float)Math.Sin(angle) * dx;
-
-					float rightX = end.X - arrowSize * (float)Math.Cos(angle) * dx - arrowSize * (float)Math.Sin(angle) * dy;
-					float rightY = end.Y - arrowSize * (float)Math.Cos(angle) * dy + arrowSize * (float)Math.Sin(angle) * dx;
-
-					if (Math.Abs(leftX) <= maxX && Math.Abs(leftY) <= maxY &&
-						Math.Abs(rightX) <= maxX && Math.Abs(rightY) <= maxY)
+					using (Pen arrowPen = new Pen(color, 2))
 					{
-						using (Pen arrowPen = new Pen(color, 2))
-						{
-							g.DrawLine(arrowPen, end, new PointF(leftX, leftY));
-							g.DrawLine(arrowPen, end, new PointF(rightX, rightY));
-						}
+						g.DrawLine(arrowPen, end, new PointF(leftX, leftY));
+						g.DrawLine(arrowPen, end, new PointF(rightX, rightY));
 					}
 				}
 			}
-			catch (Exception)
-			{
-			}
+			
 		}
 
 
@@ -793,6 +786,24 @@ namespace lab6
 				zBuffer.Clear();
 			}
 			pictureBox1.Invalidate();
+		}
+
+		private void buttonShading_Click(object sender, EventArgs e)
+		{
+			shadingEnabled = !shadingEnabled;
+			pictureBox1.Invalidate();
+
+		}
+
+		private void buttonLighting_Click(object sender, EventArgs e)
+		{
+			using (var lightForm = new LightSettingsForm(lightSource))
+			{
+				if (lightForm.ShowDialog() == DialogResult.OK)
+				{
+					pictureBox1.Invalidate();
+				}
+			}
 		}
 	}
 }
