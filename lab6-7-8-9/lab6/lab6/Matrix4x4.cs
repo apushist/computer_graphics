@@ -1,4 +1,6 @@
-﻿namespace lab6
+﻿using System.Numerics;
+
+namespace lab6
 {
 
     public class Matrix4x4
@@ -210,5 +212,13 @@
 
 			return fromOrigin * rotation * toOrigin;
 		}
+
+        public Vector3 TransformVector(Vector3 v)
+        {
+            float x = (float)(v.X * data[0, 0] + v.Y * data[0, 1] + v.Z * data[0, 2] + data[0, 3]);
+            float y = (float)(v.X * data[1, 0] + v.Y * data[1, 1] + v.Z * data[1, 2] + data[1, 3]);
+            float z = (float)(v.X * data[2, 0] + v.Y * data[2, 1] + v.Z * data[2, 2] + data[2, 3]);
+            return new Vector3(x, y, z);
+        }
     }
 }

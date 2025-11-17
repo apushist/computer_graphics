@@ -1,4 +1,6 @@
-﻿namespace lab6
+﻿using System.Numerics;
+
+namespace lab6
 {
     public class Camera
     {
@@ -13,6 +15,8 @@
 
         public double RotateX { get; set; } = 30.0;
         public double RotateY { get; set; } = 45.0;
+        public Vector3 Position { get; set; } = new Vector3(0, 0, 5);
+        public Vector3 Target { get; set; } = new Vector3(0, 0, 0);
 
         public Camera()
         {
@@ -74,36 +78,32 @@
             RotateX += deltaY * 0.5;
         }
 
-		public Point3D ViewDirection { get; set; } = new Point3D(0, 0, -1);
-
-		public Matrix4x4 GetViewMatrix()
+		public (PointF screenPos, float depth) ProjectTo2DWithDepth(Point3D worldPoint, int screenWidth, int screenHeight, float viewportScale = 1.0f)
 		{
-			return Matrix4x4.CreateTranslation(0, 0, -5);
-		}
+			Point3D transformed = new Point3D(worldPoint.X, worldPoint.Y, worldPoint.Z);
 
-		public double CalculateDepth(Point3D point, Matrix4x4 viewMatrix)
-		{
-			Point3D viewPoint = new Point3D(point.X, point.Y, point.Z);
-			viewPoint.Transform(viewMatrix);
-			return viewPoint.Z;
-		}
+			Matrix4x4 projection = GetProjectionMatrix();
+			transformed.Transform(projection);
 
-		public Point3D GetViewDirection()
-		{
-			// Для аксонометрической проекции - фиксированное направление
-			if (CurrentProjection == ProjectionType.Axonometric)
+			// Вычисляем глубину как расстояние до камеры
+			float depth = (float)Math.Sqrt(
+				worldPoint.X * worldPoint.X +
+				worldPoint.Y * worldPoint.Y +
+				worldPoint.Z * worldPoint.Z
+			);
+
+			if (transformed.W != 0)
 			{
-				Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
-				Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
-				Point3D direction = new Point3D(0, 0, -1);
-				direction.Transform(rotationY * rotationX);
-				return direction;
+				transformed.X /= transformed.W;
+				transformed.Y /= transformed.W;
+				transformed.Z /= transformed.W;
 			}
-			else
-			{
-				// Для перспективной - направление от камеры
-				return new Point3D(0, 0, -1);
-			}
+
+			float scale = 80f * viewportScale;
+			float x = (float)(transformed.X * scale + screenWidth / 2);
+			float y = (float)(-transformed.Y * scale + screenHeight / 2);
+
+			return (new PointF(x, y), depth);
 		}
 	}
 }
