@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace lab6
 {
@@ -24,6 +26,8 @@ namespace lab6
         private LightSource lightSource = new LightSource();
         private bool shadingEnabled = false;
         private bool usePhongShading = false;
+        private bool isTexturingEnabled = false;
+        private Texture currentTexture;
 
         public Point3D AxisPointA { get; set; } = null;
         public Point3D AxisPointB { get; set; } = null;
@@ -43,7 +47,6 @@ namespace lab6
             points.Clear();
             polyhedrons.Clear();
 
-            // ������� ��� �������������
             polyhedrons.Add(Polyhedron.CreateTetrahedron());
             polyhedrons.Add(Polyhedron.CreateHexahedron());
             polyhedrons.Add(Polyhedron.CreateOctahedron());
@@ -52,6 +55,7 @@ namespace lab6
 
             currentPolyhedron = polyhedrons[0];
 
+            currentTexture = Texture.CreateTestTexture();
         }
 
 
@@ -172,45 +176,54 @@ namespace lab6
                         faceColor = currentPolyhedron.Material.DiffuseColor;
                     }
 
-                    using (Brush faceBrush = new SolidBrush(faceColor))
+                    var points = new PointF[face.Count];
+                    bool validFace = true;
+
+                    for (int i = 0; i < face.Count; i++)
                     {
-                        var points = new PointF[face.Count];
-                        bool validFace = true;
+                        var vertex = currentPolyhedron.Vertices[face[i]];
+                        points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
 
-                        for (int i = 0; i < face.Count; i++)
+                        if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
                         {
-                            var vertex = currentPolyhedron.Vertices[face[i]];
-                            points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+                            validFace = false;
+                            break;
+                        }
+                    }
 
-                            if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+                    if (!validFace) continue;
+
+                    try
+                    {
+                        if (isTexturingEnabled && currentTexture != null)
+                        {
+                            var texCoords = CalculateDynamicTextureCoords(face, currentPolyhedron.Vertices);
+                            DrawTexturedFace(g, face, points, texCoords);
+                        }
+                        else
+                        {
+                            using (Brush faceBrush = new SolidBrush(faceColor))
                             {
-                                validFace = false;
-                                break;
+                                if (zBufferEnabled)
+                                {
+                                    DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
+                                }
+                                else
+                                {
+                                    g.FillPolygon(faceBrush, points);
+                                    g.DrawPolygon(pen, points);
+                                }
                             }
                         }
-
-                        if (!validFace) continue;
-
-                        try
-                        {
-                            if (zBufferEnabled)
-                            {
-                                DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
-                            }
-                            else
-                            {
-                                g.FillPolygon(faceBrush, points);
-                                g.DrawPolygon(pen, points);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
                     }
                 }
             }
         }
+
 
         private void DrawPolygonWithZBuffer(Graphics g, PointF[] points, List<int> face,
             int screenWidth, int screenHeight, Brush brush, Pen pen)
@@ -291,7 +304,7 @@ namespace lab6
             }
 
             bool usePhong = false;
-            try { usePhong = this.usePhongShading; } catch { usePhong = false; } // если поле не добавлено — по умолчанию Gouraud
+            try { usePhong = this.usePhongShading; } catch { usePhong = false; }
 
             for (int y = startY; y <= endY; y++)
             {
@@ -887,5 +900,186 @@ namespace lab6
             usePhongShading = checkBoxPhong.Checked;
             pictureBox1.Invalidate();
         }
+
+        private void ButtonTexture_Click(object sender, EventArgs e)
+        {
+            if (currentPolyhedron == null) return;
+
+            isTexturingEnabled = !isTexturingEnabled;
+
+            if (isTexturingEnabled)
+            {
+                currentTexture = Texture.CreateTestTexture();
+                buttonTexture.Text = "Выключить текстурирование";
+
+                MessageBox.Show("Текстура теперь должна вращаться с объектом!\nПовращайте фигуру.", "Текстурирование");
+            }
+            else
+            {
+                buttonTexture.Text = "Включить текстурирование";
+            }
+
+            pictureBox1.Invalidate();
+        }
+
+        private List<PointF> CalculateDynamicTextureCoords(List<int> face, List<Point3D> vertices)
+        {
+            var texCoords = new List<PointF>();
+
+            if (currentPolyhedron.TextureCoords != null && currentPolyhedron.TextureCoords.Count == currentPolyhedron.Vertices.Count)
+            {
+                Console.WriteLine($"Используем предварительные координаты для {currentPolyhedron.Name}");
+
+                foreach (int vertexIndex in face)
+                {
+                    if (vertexIndex < currentPolyhedron.TextureCoords.Count)
+                    {
+                        var texCoord = currentPolyhedron.TextureCoords[vertexIndex];
+                        texCoords.Add(texCoord);
+
+                        if (currentPolyhedron.Name == "Гексаэдр")
+                        {
+                            var vertex = vertices[vertexIndex];
+                            Console.WriteLine($"Куб: вершина {vertexIndex} ({vertex.X:F1},{vertex.Y:F1},{vertex.Z:F1}) -> UV ({texCoord.X:F2},{texCoord.Y:F2})");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"ОШИБКА: вершина {vertexIndex} выходит за границы TextureCoords");
+                        texCoords.Add(new PointF(0.5f, 0.5f));
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"НЕТ предварительных координат для {currentPolyhedron.Name}, используем fallback");
+
+                var faceVertices = face.Select(idx => vertices[idx]).ToList();
+
+                double minX = faceVertices.Min(v => v.X);
+                double maxX = faceVertices.Max(v => v.X);
+                double minY = faceVertices.Min(v => v.Y);
+                double maxY = faceVertices.Max(v => v.Y);
+                double minZ = faceVertices.Min(v => v.Z);
+                double maxZ = faceVertices.Max(v => v.Z);
+
+                foreach (var vertex in faceVertices)
+                {
+                    float u, v;
+
+                    if (Math.Abs(maxX - minX) >= Math.Abs(maxY - minY) && Math.Abs(maxX - minX) >= Math.Abs(maxZ - minZ))
+                    {
+                        u = (float)((vertex.Z - minZ) / (maxZ - minZ));
+                        v = (float)((vertex.Y - minY) / (maxY - minY));
+                    }
+                    else if (Math.Abs(maxY - minY) >= Math.Abs(maxZ - minZ))
+                    {
+                        u = (float)((vertex.X - minX) / (maxX - minX));
+                        v = (float)((vertex.Z - minZ) / (maxZ - minZ));
+                    }
+                    else
+                    {
+                        u = (float)((vertex.X - minX) / (maxX - minX));
+                        v = (float)((vertex.Y - minY) / (maxY - minY));
+                    }
+
+                    texCoords.Add(new PointF(u, v));
+                }
+            }
+
+            return texCoords;
+        }
+
+        private void DrawTexturedFace(Graphics g, List<int> face, PointF[] screenPoints, List<PointF> texCoords)
+        {
+            if (currentTexture == null || currentTexture.Bitmap == null) return;
+
+            try
+            {
+                using (var textureBrush = new TextureBrush(currentTexture.Bitmap))
+                {
+                    SetupTextureMapping(textureBrush, screenPoints, texCoords);
+
+                    g.FillPolygon(textureBrush, screenPoints);
+                }
+
+                using (var pen = new Pen(Color.DarkGray, 1))
+                {
+                    g.DrawPolygon(pen, screenPoints);
+                }
+            }
+            catch (Exception ex)
+            {
+                using (var brush = new SolidBrush(Color.FromArgb(150, 255, 255, 0)))
+                using (var pen = new Pen(Color.Black, 1))
+                {
+                    g.FillPolygon(brush, screenPoints);
+                    g.DrawPolygon(pen, screenPoints);
+                }
+            }
+        }
+
+        private void SetupTextureMapping(TextureBrush brush, PointF[] screenPoints, List<PointF> texCoords)
+        {
+            if (screenPoints.Length < 3 || texCoords.Count < 3) return;
+
+            try
+            {
+                PointF[] sourcePoints = new PointF[3];
+                PointF[] destPoints = new PointF[3];
+
+                for (int i = 0; i < 3; i++)
+                {
+                    sourcePoints[i] = new PointF(
+                        texCoords[i].X * currentTexture.Bitmap.Width,
+                        texCoords[i].Y * currentTexture.Bitmap.Height
+                    );
+                    destPoints[i] = screenPoints[i];
+                }
+
+                using (Matrix transform = new Matrix(
+                    new RectangleF(0, 0, currentTexture.Bitmap.Width, currentTexture.Bitmap.Height),
+                    sourcePoints
+                ))
+                {
+                    transform.Reset();
+
+                    PointF p0 = sourcePoints[0];
+                    PointF p1 = sourcePoints[1];
+                    PointF p2 = sourcePoints[2];
+                    PointF q0 = destPoints[0];
+                    PointF q1 = destPoints[1];
+                    PointF q2 = destPoints[2];
+
+                    float det = (p1.X - p0.X) * (p2.Y - p0.Y) - (p1.Y - p0.Y) * (p2.X - p0.X);
+                    if (Math.Abs(det) < 1e-10f) return;
+
+                    float a11 = ((q1.X - q0.X) * (p2.Y - p0.Y) - (q2.X - q0.X) * (p1.Y - p0.Y)) / det;
+                    float a12 = ((q2.X - q0.X) * (p1.X - p0.X) - (q1.X - q0.X) * (p2.X - p0.X)) / det;
+                    float a21 = ((q1.Y - q0.Y) * (p2.Y - p0.Y) - (q2.Y - q0.Y) * (p1.Y - p0.Y)) / det;
+                    float a22 = ((q2.Y - q0.Y) * (p1.X - p0.X) - (q1.Y - q0.Y) * (p2.X - p0.X)) / det;
+                    float dx = q0.X - a11 * p0.X - a12 * p0.Y;
+                    float dy = q0.Y - a21 * p0.X - a22 * p0.Y;
+
+                    transform.Reset();
+                    transform.Multiply(new Matrix(a11, a21, a12, a22, dx, dy));
+
+                    brush.Transform = transform;
+                }
+            }
+            catch (Exception ex)
+            {
+                brush.ResetTransform();
+
+                float centerX = screenPoints.Average(p => p.X);
+                float centerY = screenPoints.Average(p => p.Y);
+
+                brush.TranslateTransform(centerX - currentTexture.Bitmap.Width / 2,
+                                       centerY - currentTexture.Bitmap.Height / 2);
+
+                Console.WriteLine($"Texture mapping error: {ex.Message}");
+            }
+        }
+
     }
 }

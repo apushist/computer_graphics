@@ -49,6 +49,7 @@
             label2 = new Label();
             label3 = new Label();
             panel1 = new Panel();
+            buttonTexture = new Button();
             buttonLighting = new Button();
             buttonShading = new Button();
             buttonZB = new Button();
@@ -218,7 +219,7 @@
             // buttonRefl
             // 
             buttonRefl.Font = new Font("Segoe UI", 11F);
-            buttonRefl.Location = new Point(5, 535);
+            buttonRefl.Location = new Point(3, 524);
             buttonRefl.Margin = new Padding(5, 4, 5, 4);
             buttonRefl.Name = "buttonRefl";
             buttonRefl.Size = new Size(171, 36);
@@ -295,6 +296,7 @@
             // panel1
             // 
             panel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            panel1.Controls.Add(buttonTexture);
             panel1.Controls.Add(buttonLighting);
             panel1.Controls.Add(buttonShading);
             panel1.Controls.Add(buttonZB);
@@ -325,10 +327,20 @@
             panel1.Size = new Size(184, 760);
             panel1.TabIndex = 12;
             // 
+            // buttonTexture
+            // 
+            buttonTexture.Location = new Point(5, 684);
+            buttonTexture.Name = "buttonTexture";
+            buttonTexture.Size = new Size(172, 29);
+            buttonTexture.TabIndex = 20;
+            buttonTexture.Text = "Текстурирование";
+            buttonTexture.UseVisualStyleBackColor = true;
+            buttonTexture.Click += ButtonTexture_Click;
+            // 
             // buttonLighting
             // 
             buttonLighting.Font = new Font("Segoe UI", 10F);
-            buttonLighting.Location = new Point(5, 667);
+            buttonLighting.Location = new Point(5, 643);
             buttonLighting.Margin = new Padding(5, 4, 5, 4);
             buttonLighting.Name = "buttonLighting";
             buttonLighting.Size = new Size(171, 36);
@@ -340,10 +352,10 @@
             // buttonShading
             // 
             buttonShading.Font = new Font("Segoe UI", 10F);
-            buttonShading.Location = new Point(5, 579);
+            buttonShading.Location = new Point(3, 568);
             buttonShading.Margin = new Padding(5, 4, 5, 4);
             buttonShading.Name = "buttonShading";
-            buttonShading.Size = new Size(171, 80);
+            buttonShading.Size = new Size(171, 68);
             buttonShading.TabIndex = 27;
             buttonShading.Text = "Переключить затенение";
             buttonShading.UseVisualStyleBackColor = true;
@@ -377,7 +389,7 @@
             // 
             comboBoxReflection.FormattingEnabled = true;
             comboBoxReflection.Items.AddRange(new object[] { "XY", "XZ", "YZ" });
-            comboBoxReflection.Location = new Point(5, 500);
+            comboBoxReflection.Location = new Point(5, 492);
             comboBoxReflection.Name = "comboBoxReflection";
             comboBoxReflection.Size = new Size(173, 28);
             comboBoxReflection.TabIndex = 24;
@@ -386,7 +398,7 @@
             // label8
             // 
             label8.Font = new Font("Segoe UI", 12F);
-            label8.Location = new Point(7, 465);
+            label8.Location = new Point(1, 458);
             label8.Name = "label8";
             label8.Size = new Size(175, 31);
             label8.TabIndex = 23;
@@ -639,5 +651,6 @@
 		private Button buttonLighting;
 		private Button buttonShading;
         private CheckBox checkBoxPhong;
+        private Button buttonTexture;
     }
 }
