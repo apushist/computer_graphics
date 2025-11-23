@@ -32,8 +32,6 @@ namespace lab6
         private bool zBufferEnabled = false;
         private LightSource lightSource = new LightSource();
         private shadingState currShadingState = shadingState.off;
-        private bool shadingEnabled = false;
-        private bool usePhongShading = false;
         private bool isTexturingEnabled = false;
         private Texture currentTexture;
 
