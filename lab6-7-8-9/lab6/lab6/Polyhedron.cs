@@ -10,8 +10,76 @@ namespace lab6
 		public List<List<int>> NormalIndices { get; set; } = new List<List<int>>();
 		public Material Material { get; set; } = new Material();
 
+        public List<PointF> TextureCoords { get; set; } = new List<PointF>();
 
-		public Polyhedron()
+        public void CalculateTextureCoords()
+        {
+            TextureCoords.Clear();
+
+            if (Name == "Гексаэдр") 
+            {
+                CalculateCubeTextureCoords();
+            }
+            else
+            {
+                foreach (var vertex in Vertices)
+                {
+                    float u = (float)(0.5 + Math.Atan2(vertex.Z, vertex.X) / (2 * Math.PI));
+                    float v = (float)(0.5 - Math.Asin(vertex.Y) / Math.PI);
+                    TextureCoords.Add(new PointF(u, v));
+                }
+            }
+        }
+
+        private void CalculateCubeTextureCoords()
+        {
+            foreach (var vertex in Vertices)
+            {
+                float u, v;
+
+
+                if (Math.Abs(vertex.X - 1.0) < 0.01) 
+                {
+                    u = (float)((vertex.Z + 1) / 2);
+                    v = (float)((vertex.Y + 1) / 2);
+                }
+                else if (Math.Abs(vertex.X + 1.0) < 0.01) 
+                {
+                    u = (float)((1 - vertex.Z) / 2);
+                    v = (float)((vertex.Y + 1) / 2);
+                }
+                else if (Math.Abs(vertex.Y - 1.0) < 0.01) 
+                {
+                    u = (float)((vertex.X + 1) / 2);
+                    v = (float)((vertex.Z + 1) / 2); 
+                }
+                else if (Math.Abs(vertex.Y + 1.0) < 0.01) 
+                {
+                    u = (float)((vertex.X + 1) / 2);
+                    v = (float)((1 - vertex.Z) / 2);
+                }
+                else if (Math.Abs(vertex.Z - 1.0) < 0.01) 
+                {
+                    u = (float)((1 - vertex.X) / 2);
+                    v = (float)((vertex.Y + 1) / 2);
+                }
+                else if (Math.Abs(vertex.Z + 1.0) < 0.01) 
+                {
+                    u = (float)((vertex.X + 1) / 2);
+                    v = (float)((vertex.Y + 1) / 2);
+                }
+                else
+                {
+                    u = 0.5f;
+                    v = 0.5f;
+                }
+
+                TextureCoords.Add(new PointF(u, v));
+            }
+        }
+
+
+        public Polyhedron()
 		{
 			Vertices = new List<Point3D>();
 			Faces = new List<List<int>>();
@@ -63,42 +131,46 @@ namespace lab6
 				[ 1, 3, 2 ]
 			]);
 
-			return poly;
+            poly.CalculateTextureCoords();
+            poly.CalculateVertexNormals();
+            return poly;
 		}
 
-		public static Polyhedron CreateHexahedron(double size = 1.0)
-		{
-			var poly = new Polyhedron();
-			poly.Name = "Гексаэдр";
+        public static Polyhedron CreateHexahedron(double size = 1.0)
+        {
+            var poly = new Polyhedron();
+            poly.Name = "Гексаэдр";
+            double s = size;
 
-			double s = size;
-
-			poly.Vertices.AddRange(
-			[
-				new Point3D(-s, -s, -s), 
-                new Point3D(s, -s, -s),  
-                new Point3D(s, s, -s),  
+            poly.Vertices.AddRange(
+            [
+                new Point3D(-s, -s, -s), 
+                new Point3D(s, -s, -s), 
+                new Point3D(s, s, -s), 
                 new Point3D(-s, s, -s), 
-                new Point3D(-s, -s, s),  
+                new Point3D(-s, -s, s),
                 new Point3D(s, -s, s),  
-                new Point3D(s, s, s),    
-                new Point3D(-s, s, s)    
+                new Point3D(s, s, s),  
+                new Point3D(-s, s, s) 
+                    ]);
+
+            poly.Faces.AddRange(
+            [
+                new List<int> { 0, 3, 2, 1 }, 
+        new List<int> { 4, 5, 6, 7 }, 
+        new List<int> { 0, 4, 7, 3 },  
+        new List<int> { 1, 2, 6, 5 },
+        new List<int> { 0, 1, 5, 4 }, 
+        new List<int> { 3, 7, 6, 2 }  
             ]);
 
-			poly.Faces.AddRange(
-			[
-				[ 0, 1, 2, 3 ],
-                [ 4, 5, 6, 7 ],
-                [ 0, 1, 5, 4 ], 
-                [ 2, 3, 7, 6 ],
-                [0, 3, 7, 4], 
-                [1, 2, 6, 5]  
-            ]);
+            poly.CalculateTextureCoords();
+            poly.CalculateVertexNormals();
 
-			return poly;
-		}
+            return poly;
+        }
 
-		public static Polyhedron CreateOctahedron(double size = 1.0)
+        public static Polyhedron CreateOctahedron(double size = 1.0)
 		{
 			var poly = new Polyhedron();
 			poly.Name = "Октаэдр";
@@ -127,7 +199,9 @@ namespace lab6
 				[ 1, 4, 2 ]
 			]);
 
-			return poly;
+            poly.CalculateTextureCoords();
+            poly.CalculateVertexNormals();
+            return poly;
 		}
 
 		public static Polyhedron CreateIcosahedron(double size = 1.0)
@@ -344,50 +418,63 @@ namespace lab6
             poly.Faces = faces;
             return poly;
         }
-		public void CalculateVertexNormals()
-		{
-			Normals.Clear();
+        public void CalculateVertexNormals()
+        {
+            Normals.Clear();
 
-			for (int i = 0; i < Vertices.Count; i++)
-			{
-				Normals.Add(new VertexNormal(0, 0, 0));
-			}
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                Normals.Add(new VertexNormal(0, 0, 0));
+            }
 
-			foreach (var face in Faces)
-			{
-				if (face.Count < 3) continue;
+            foreach (var face in Faces)
+            {
+                if (face.Count < 3) continue;
 
-				var v0 = Vertices[face[0]];
-				var v1 = Vertices[face[1]];
-				var v2 = Vertices[face[2]];
+                var v0 = Vertices[face[0]];
+                var v1 = Vertices[face[1]];
+                var v2 = Vertices[face[2]];
 
-				var edge1 = new Point3D(v1.X - v0.X, v1.Y - v0.Y, v1.Z - v0.Z, 0);
-				var edge2 = new Point3D(v2.X - v0.X, v2.Y - v0.Y, v2.Z - v0.Z, 0);
+                var edge1 = new Point3D(v1.X - v0.X, v1.Y - v0.Y, v1.Z - v0.Z);
+                var edge2 = new Point3D(v2.X - v0.X, v2.Y - v0.Y, v2.Z - v0.Z);
 
-				var faceNormal = Point3D.CrossProduct(edge1, edge2);
-				double length = faceNormal.Length();
-				if (length > 0)
-				{
-					faceNormal.X /= length;
-					faceNormal.Y /= length;
-					faceNormal.Z /= length;
-				}
+                var faceNormal = Point3D.CrossProduct(edge1, edge2);
+                faceNormal.Normalize();
 
-				foreach (int vertexIndex in face)
-				{
-					Normals[vertexIndex].X += faceNormal.X;
-					Normals[vertexIndex].Y += faceNormal.Y;
-					Normals[vertexIndex].Z += faceNormal.Z;
-				}
-			}
+                Point3D faceCenter = new Point3D(0, 0, 0);
+                foreach (int vertexIndex in face)
+                {
+                    faceCenter.X += Vertices[vertexIndex].X;
+                    faceCenter.Y += Vertices[vertexIndex].Y;
+                    faceCenter.Z += Vertices[vertexIndex].Z;
+                }
+                faceCenter.X /= face.Count;
+                faceCenter.Y /= face.Count;
+                faceCenter.Z /= face.Count;
 
-			foreach (var normal in Normals)
-			{
-				normal.Normalize();
-			}
-		}
+                double dot = faceNormal.X * faceCenter.X + faceNormal.Y * faceCenter.Y + faceNormal.Z * faceCenter.Z;
+                if (dot > 0)
+                {
+                    faceNormal.X = -faceNormal.X;
+                    faceNormal.Y = -faceNormal.Y;
+                    faceNormal.Z = -faceNormal.Z;
+                }
 
-		public void TransformNormals(Matrix4x4 matrix)
+                foreach (int vertexIndex in face)
+                {
+                    Normals[vertexIndex].X += faceNormal.X;
+                    Normals[vertexIndex].Y += faceNormal.Y;
+                    Normals[vertexIndex].Z += faceNormal.Z;
+                }
+            }
+
+            foreach (var normal in Normals)
+            {
+                normal.Normalize();
+            }
+        }
+
+        public void TransformNormals(Matrix4x4 matrix)
 		{
 			for (int i = 0; i < Normals.Count; i++)
 			{
