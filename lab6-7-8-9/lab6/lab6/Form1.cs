@@ -21,7 +21,7 @@ namespace lab6
         private double dz = 1;
         public PictureBox MainPictureBox => pictureBox1;
         private ZBuffer zBuffer;
-        private bool backfaceCullingEnabled = false;
+        private bool backfaceCullingEnabled = true;
         private bool zBufferEnabled = false;
         private LightSource lightSource = new LightSource();
         private bool shadingEnabled = false;
@@ -210,7 +210,6 @@ namespace lab6
                                 }
                                 else
                                 {
-                                    g.FillPolygon(faceBrush, points);
                                     g.DrawPolygon(pen, points);
                                 }
                             }
