@@ -49,9 +49,9 @@
             label2 = new Label();
             label3 = new Label();
             panel1 = new Panel();
+            comboBoxShading = new ComboBox();
             buttonTexture = new Button();
             buttonLighting = new Button();
-            buttonShading = new Button();
             buttonZB = new Button();
             buttonRotateAroundAxis = new Button();
             comboBoxReflection = new ComboBox();
@@ -71,7 +71,6 @@
             buttonSave = new Button();
             buttonLoad = new Button();
             buttonFigRotate = new Button();
-            checkBoxPhong = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             panel1.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -296,9 +295,9 @@
             // panel1
             // 
             panel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            panel1.Controls.Add(comboBoxShading);
             panel1.Controls.Add(buttonTexture);
             panel1.Controls.Add(buttonLighting);
-            panel1.Controls.Add(buttonShading);
             panel1.Controls.Add(buttonZB);
             panel1.Controls.Add(buttonRotateAroundAxis);
             panel1.Controls.Add(comboBoxReflection);
@@ -327,6 +326,16 @@
             panel1.Size = new Size(184, 760);
             panel1.TabIndex = 12;
             // 
+            // comboBoxShading
+            // 
+            comboBoxShading.FormattingEnabled = true;
+            comboBoxShading.Items.AddRange(new object[] { "Выключить", "Гуро + Ламберт", "Фонг + Туншейдинг" });
+            comboBoxShading.Location = new Point(3, 589);
+            comboBoxShading.Name = "comboBoxShading";
+            comboBoxShading.Size = new Size(177, 28);
+            comboBoxShading.TabIndex = 19;
+            comboBoxShading.SelectedIndexChanged += comboBoxShading_SelectedIndexChanged;
+            // 
             // buttonTexture
             // 
             buttonTexture.Location = new Point(5, 684);
@@ -348,18 +357,6 @@
             buttonLighting.Text = "Настройки света";
             buttonLighting.UseVisualStyleBackColor = true;
             buttonLighting.Click += buttonLighting_Click;
-            // 
-            // buttonShading
-            // 
-            buttonShading.Font = new Font("Segoe UI", 10F);
-            buttonShading.Location = new Point(3, 568);
-            buttonShading.Margin = new Padding(5, 4, 5, 4);
-            buttonShading.Name = "buttonShading";
-            buttonShading.Size = new Size(171, 68);
-            buttonShading.TabIndex = 27;
-            buttonShading.Text = "Переключить затенение";
-            buttonShading.UseVisualStyleBackColor = true;
-            buttonShading.Click += buttonShading_Click;
             // 
             // buttonZB
             // 
@@ -514,7 +511,6 @@
             tableLayoutPanel1.Controls.Add(buttonDod, 4, 0);
             tableLayoutPanel1.Controls.Add(buttonOct, 2, 0);
             tableLayoutPanel1.Controls.Add(buttonIco, 3, 0);
-            tableLayoutPanel1.Controls.Add(checkBoxPhong, 4, 1);
             tableLayoutPanel1.Location = new Point(-3, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 2;
@@ -574,18 +570,6 @@
             buttonFigRotate.TextAlign = ContentAlignment.TopCenter;
             buttonFigRotate.UseVisualStyleBackColor = true;
             buttonFigRotate.Click += ButtonFigRotate_Click;
-            // 
-            // checkBoxPhong
-            // 
-            checkBoxPhong.AutoSize = true;
-            checkBoxPhong.Font = new Font("Segoe UI", 11F);
-            checkBoxPhong.Location = new Point(723, 46);
-            checkBoxPhong.Name = "checkBoxPhong";
-            checkBoxPhong.Size = new Size(170, 29);
-            checkBoxPhong.TabIndex = 15;
-            checkBoxPhong.Text = "Шейдинг Фонга";
-            checkBoxPhong.UseVisualStyleBackColor = true;
-            checkBoxPhong.CheckedChanged += CheckBoxPhong_CheckedChanged;
             // 
             // Form1
             // 
@@ -649,8 +633,7 @@
 		private Button buttonFunctionGraph;
 		private Button buttonZB;
 		private Button buttonLighting;
-		private Button buttonShading;
-        private CheckBox checkBoxPhong;
         private Button buttonTexture;
+        private ComboBox comboBoxShading;
     }
 }

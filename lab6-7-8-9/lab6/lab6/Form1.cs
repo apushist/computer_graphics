@@ -6,6 +6,13 @@ namespace lab6
 {
     public partial class Form1 : Form
     {
+        private enum shadingState
+        {
+            off = 0,
+            guro,
+            phong
+        }
+
         private Camera camera = new Camera();
         private Viewport viewport = new Viewport();
         private List<Point3D> points = new List<Point3D>();
@@ -21,9 +28,10 @@ namespace lab6
         private double dz = 1;
         public PictureBox MainPictureBox => pictureBox1;
         private ZBuffer zBuffer;
-        private bool backfaceCullingEnabled = true;
+        private bool backfaceCullingEnabled = false;
         private bool zBufferEnabled = false;
         private LightSource lightSource = new LightSource();
+        private shadingState currShadingState = shadingState.off;
         private bool shadingEnabled = false;
         private bool usePhongShading = false;
         private bool isTexturingEnabled = false;
@@ -40,6 +48,7 @@ namespace lab6
             comboBoxReflection.Items.Clear();
             comboBoxReflection.Items.AddRange(["XY", "XZ", "YZ"]);
             comboBoxReflection.SelectedIndex = 0;
+            comboBoxShading.SelectedIndex = 0;
         }
 
         private void InitializePoints()
@@ -166,14 +175,18 @@ namespace lab6
                         if (dot >= 0) continue;
                     }
 
-                    Color faceColor;
-                    if (shadingEnabled)
+                    Color faceColor = Color.White;
+                    switch (currShadingState)
                     {
-                        faceColor = CalculateFaceColor(face, rotationMatrix);
-                    }
-                    else
-                    {
-                        faceColor = currentPolyhedron.Material.DiffuseColor;
+                        case shadingState.off:
+                            faceColor = currentPolyhedron.Material.DiffuseColor;
+                            break;
+                        case shadingState.guro:
+                            faceColor = CalculateFaceColor(face, rotationMatrix);
+                            break;
+                        case shadingState.phong:
+                            faceColor = Color.White;
+                            break;
                     }
 
                     var points = new PointF[face.Count];
@@ -302,9 +315,6 @@ namespace lab6
                 vColors[i] = baseCol * intensity * lightCol;
             }
 
-            bool usePhong = false;
-            try { usePhong = this.usePhongShading; } catch { usePhong = false; }
-
             for (int y = startY; y <= endY; y++)
             {
                 for (int x = startX; x <= endX; x++)
@@ -318,52 +328,26 @@ namespace lab6
                         float depth = w0 * z0 + w1 * z1 + w2 * z2;
                         if (!zBuffer.TestAndSet(x, y, depth)) continue;
 
-                        Vector3 finalColorVec;
-
-                        if (!shadingEnabled)
+                        Vector3 finalColorVec = new(0, 0, 0);
+                        switch (currShadingState)
                         {
-                            finalColorVec = ColorToVec(((SolidBrush)brush).Color);
-                        }
-                        else if (!usePhong)
-                        {
-                            finalColorVec = vColors[0] * w0 + vColors[1] * w1 + vColors[2] * w2;
-                        }
-                        else
-                        {
-                            Vector3 interpNormal = Vector3.Normalize(vNormals[0] * w0 + vNormals[1] * w1 + vNormals[2] * w2);
-                            Vector3 interpPos = vWorldPos[0] * w0 + vWorldPos[1] * w1 + vWorldPos[2] * w2;
+                            case shadingState.off:
+                                finalColorVec = ColorToVec(((SolidBrush)brush).Color);
+                                break;
+                            case shadingState.guro:
+                                finalColorVec = vColors[0] * w0 + vColors[1] * w1 + vColors[2] * w2;
+                                break;
+                            case shadingState.phong:
+                                Vector3 interpNormal = Vector3.Normalize(vNormals[0] * w0 + vNormals[1] * w1 + vNormals[2] * w2);
+                                Vector3 interpPos = vWorldPos[0] * w0 + vWorldPos[1] * w1 + vWorldPos[2] * w2;
 
-                            Vector3 baseCol = ColorToVec(currentPolyhedron.Material.DiffuseColor);
-                            Vector3 lightCol = ColorToVec(lightSource.Color) * lightSource.Intensity;
-                            Vector3 ambient = baseCol * currentPolyhedron.Material.AmbientIntensity;
-
-                            Vector3 L = Vector3.Normalize(new Vector3(
-                                (float)(lightSource.Position.X - interpPos.X),
-                                (float)(lightSource.Position.Y - interpPos.Y),
-                                (float)(lightSource.Position.Z - interpPos.Z)
-                            ));
-
-                            float diff = Math.Max(Vector3.Dot(interpNormal, L), 0f);
-                            Vector3 diffuse = baseCol * currentPolyhedron.Material.DiffuseIntensity * diff;
-
-                            Vector3 V = Vector3.Normalize(-interpPos);
-                            Vector3 R = Vector3.Reflect(-L, interpNormal);
-                            float spec = 0f;
-                            if (diff > 0f)
-                            {
-                                float shininess = 32f;
-                                spec = (float)Math.Pow(Math.Max(Vector3.Dot(R, V), 0f), shininess);
-                            }
-                            Vector3 specular = new Vector3(1, 1, 1) * spec * 0.5f;
-
-                            finalColorVec = (ambient + diffuse + specular) * lightCol;
+                                finalColorVec = ComputeCelShading(interpNormal, interpPos);
+                                break;
                         }
 
                         Color finalColor = VecToColor(finalColorVec);
-                        using (var pixelBrush = new SolidBrush(finalColor))
-                        {
-                            g.FillRectangle(pixelBrush, x, y, 1, 1);
-                        }
+                        using var pixelBrush = new SolidBrush(finalColor);
+                        g.FillRectangle(pixelBrush, x, y, 1, 1);
                     }
                 }
             }
@@ -408,6 +392,33 @@ namespace lab6
                 Math.Min(255, Math.Max(0, r)),
                 Math.Min(255, Math.Max(0, g)),
                 Math.Min(255, Math.Max(0, b)));
+        }
+
+        // --- Вычисление цвета по модели туншейдинг ---
+        private Vector3 ComputeCelShading(Vector3 interpNormal, Vector3 interpPos)
+        {
+            Vector3 ColorToVec(Color c) => new Vector3(c.R / 255f, c.G / 255f, c.B / 255f);
+
+            Vector3 baseCol = ColorToVec(currentPolyhedron.Material.DiffuseColor);
+            Vector3 lightCol = ColorToVec(lightSource.Color) * lightSource.Intensity;
+
+            Vector3 L = Vector3.Normalize(new Vector3(
+                (float)(lightSource.Position.X - interpPos.X),
+                (float)(lightSource.Position.Y - interpPos.Y),
+                (float)(lightSource.Position.Z - interpPos.Z)
+            ));
+
+            float diff = Math.Max(Vector3.Dot(interpNormal, L), 0f);
+            diff = 0.2f + diff;
+
+            if (diff < 0.4f)
+                diff = 0.3f;
+            else if (diff < 0.7f)
+                diff = 1.0f;
+            else
+                diff = 1.3f;
+
+            return baseCol * diff * lightCol;
         }
 
         private void DrawArrow(Graphics g, PointF start, PointF end, Color color)
@@ -597,6 +608,8 @@ namespace lab6
 
         private void BtnResetView_Click(object sender, EventArgs e)
         {
+            comboBoxShading.SelectedIndex = 0;
+            currShadingState = shadingState.off;
             viewport.Reset();
             InitializePoints();
             AxisPointA = null;
@@ -876,13 +889,6 @@ namespace lab6
             pictureBox1.Invalidate();
         }
 
-        private void buttonShading_Click(object sender, EventArgs e)
-        {
-            shadingEnabled = !shadingEnabled;
-            pictureBox1.Invalidate();
-
-        }
-
         private void buttonLighting_Click(object sender, EventArgs e)
         {
             using (var lightForm = new LightSettingsForm(lightSource))
@@ -892,12 +898,6 @@ namespace lab6
                     pictureBox1.Invalidate();
                 }
             }
-        }
-
-        private void CheckBoxPhong_CheckedChanged(object sender, EventArgs e)
-        {
-            usePhongShading = checkBoxPhong.Checked;
-            pictureBox1.Invalidate();
         }
 
         private void ButtonTexture_Click(object sender, EventArgs e)
@@ -1080,5 +1080,11 @@ namespace lab6
             }
         }
 
+        private void comboBoxShading_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var mode = comboBoxShading.SelectedIndex;
+            currShadingState = (shadingState)mode;
+            pictureBox1.Invalidate();
+        }
     }
 }
