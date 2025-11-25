@@ -176,6 +176,11 @@ namespace lab6
 					}
 				}
 
+				foreach (var normal in polyhedron.Normals)
+				{
+					writer.WriteLine(string.Format(CultureInfo.InvariantCulture,
+						 "vn {0:F6} {1:F6} {2:F6}", normal.X, normal.Y, normal.Z));
+				}
 
 				//сюда нужно будет добавить штуки для записи в файл других компонентов когда они будут
 			}

@@ -47,7 +47,8 @@ namespace lab6
             comboBoxReflection.Items.AddRange(["XY", "XZ", "YZ"]);
             comboBoxReflection.SelectedIndex = 0;
             comboBoxShading.SelectedIndex = 0;
-        }
+
+		}
 
         private void InitializePoints()
         {
@@ -94,12 +95,9 @@ namespace lab6
         {
             if (currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0) return;
 
-            if (currentPolyhedron.Normals.Count == 0)
-            {
-                currentPolyhedron.CalculateVertexNormals();
-            }
+			var polyhedronsToDraw = new List<Polyhedron> { currentPolyhedron };
 
-            if (zBufferEnabled)
+			if (zBufferEnabled)
             {
                 if (zBuffer == null || screenWidth != zBuffer.Width || screenHeight != zBuffer.Height)
                 {
@@ -110,128 +108,143 @@ namespace lab6
 
             float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
 
-            using (Pen pen = new Pen(Color.Black, 2))
+            foreach (var polyhedron in polyhedronsToDraw)
             {
-                Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
-                Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
-                Matrix4x4 rotationMatrix = rotY * rotX;
+                if (polyhedron.Vertices.Count == 0 || polyhedron.Faces.Count == 0) continue;
 
-                Vector3 view;
-                if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
+                if (polyhedron.Normals.Count == 0)
                 {
-                    view = Vector3.Normalize(camera.Target - camera.Position);
-                }
-                else
-                {
-                    view = new Vector3(0, 0, -1);
+                    polyhedron.CalculateVertexNormals();
                 }
 
-                var sortedFaces = new List<(List<int> face, double depth)>();
+				using (Pen pen = new Pen(polyhedron.Material.DiffuseColor, 2))
+				{
+					Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
+					Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
+					Matrix4x4 rotationMatrix = rotY * rotX;
 
-                foreach (var face in currentPolyhedron.Faces)
-                {
-                    if (face.Count < 3) continue;
+					Vector3 view;
+					if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
+					{
+						view = Vector3.Normalize(camera.Target - camera.Position);
+					}
+					else
+					{
+						view = new Vector3(0, 0, -1);
+					}
 
-                    double avgDepth = 0;
-                    foreach (int vertexIndex in face)
-                    {
-                        var vertex = currentPolyhedron.Vertices[vertexIndex];
-                        avgDepth += Math.Sqrt(vertex.X * vertex.X + vertex.Y * vertex.Y + vertex.Z * vertex.Z);
-                    }
-                    avgDepth /= face.Count;
+					var sortedFaces = new List<(List<int> face, double depth)>();
 
-                    sortedFaces.Add((face, avgDepth));
-                }
+					foreach (var face in polyhedron.Faces)
+					{
+						if (face.Count < 3) continue;
 
-                if (!zBufferEnabled)
-                {
-                    sortedFaces = sortedFaces.OrderByDescending(f => f.depth).ToList();
-                }
+						double avgDepth = 0;
+						foreach (int vertexIndex in face)
+						{
+							var vertex = polyhedron.Vertices[vertexIndex];
+							avgDepth += vertex.Z;
+						}
+						avgDepth /= face.Count;
 
-                foreach (var (face, depth) in sortedFaces)
-                {
-                    if (face.Count < 3) continue;
+						sortedFaces.Add((face, avgDepth));
+					}
 
-                    if (backfaceCullingEnabled)
-                    {
-                        var v0 = currentPolyhedron.Vertices[face[0]];
-                        var v1 = currentPolyhedron.Vertices[face[1]];
-                        var v2 = currentPolyhedron.Vertices[face[2]];
+					if (!zBufferEnabled)
+					{
+						sortedFaces = sortedFaces.OrderByDescending(f => f.depth).ToList();
+					}
 
-                        var a = new Vector3((float)(v1.X - v0.X), (float)(v1.Y - v0.Y), (float)(v1.Z - v0.Z));
-                        var b = new Vector3((float)(v2.X - v0.X), (float)(v2.Y - v0.Y), (float)(v2.Z - v0.Z));
+					foreach (var (face, depth) in sortedFaces)
+					{
+						if (face.Count < 3) continue;
 
-                        var normal = Vector3.Cross(a, b);
-                        Vector3 transformedNormal = normal;
+						if (backfaceCullingEnabled)
+						{
+							var v0 = polyhedron.Vertices[face[0]];
+							var v1 = polyhedron.Vertices[face[1]];
+							var v2 = polyhedron.Vertices[face[2]];
 
-                        if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
-                        {
-                            transformedNormal = rotationMatrix.TransformVector(normal);
-                        }
+							var a = new Vector3((float)(v1.X - v0.X), (float)(v1.Y - v0.Y), (float)(v1.Z - v0.Z));
+							var b = new Vector3((float)(v2.X - v0.X), (float)(v2.Y - v0.Y), (float)(v2.Z - v0.Z));
 
-                        float dot = Vector3.Dot(transformedNormal, view);
-                        if (dot >= 0) continue;
-                    }
+							var normal = Vector3.Cross(a, b);
+							Vector3 transformedNormal = normal;
 
-                    Color faceColor = Color.White;
-                    switch (currShadingState)
-                    {
-                        case shadingState.off:
-                            faceColor = currentPolyhedron.Material.DiffuseColor;
-                            break;
-                        case shadingState.guro:
-                            faceColor = CalculateFaceColor(face, rotationMatrix);
-                            break;
-                        case shadingState.phong:
-                            faceColor = Color.White;
-                            break;
-                    }
+							if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
+							{
+								transformedNormal = rotationMatrix.TransformVector(normal);
+							}
 
-                    var points = new PointF[face.Count];
-                    bool validFace = true;
+							float dot = Vector3.Dot(transformedNormal, view);
+							if (dot >= 0) continue;
+						}
 
-                    for (int i = 0; i < face.Count; i++)
-                    {
-                        var vertex = currentPolyhedron.Vertices[face[i]];
-                        points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+						Color faceColor = Color.White;
+						switch (currShadingState)
+						{
+							case shadingState.off:
+								faceColor = polyhedron.Material.DiffuseColor;
+								break;
+							case shadingState.guro:
+								faceColor = CalculateFaceColor(face, rotationMatrix);
+								break;
+							case shadingState.phong:
+								faceColor = Color.White;
+								break;
+						}
 
-                        if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
-                        {
-                            validFace = false;
-                            break;
-                        }
-                    }
+						var points = new PointF[face.Count];
+						bool validFace = true;
 
-                    if (!validFace) continue;
+						for (int i = 0; i < face.Count; i++)
+						{
+							var vertex = polyhedron.Vertices[face[i]];
+							points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
 
-                    try
-                    {
-                        if (isTexturingEnabled && currentTexture != null)
-                        {
-                            var texCoords = CalculateDynamicTextureCoords(face, currentPolyhedron.Vertices);
-                            DrawTexturedFace(g, face, points, texCoords);
-                        }
-                        else
-                        {
-                            using (Brush faceBrush = new SolidBrush(faceColor))
-                            {
-                                if (zBufferEnabled)
-                                {
-                                    DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
-                                }
-                                else
-                                {
-                                    g.DrawPolygon(pen, points);
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
-                    }
-                }
-            }
+							if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+							{
+								validFace = false;
+								break;
+							}
+						}
+
+						if (!validFace) continue;
+
+						try
+						{
+							if (isTexturingEnabled && currentTexture != null)
+							{
+								var texCoords = CalculateDynamicTextureCoords(face, polyhedron.Vertices);
+								DrawTexturedFace(g, face, points, texCoords);
+							}
+							else
+							{
+								using (Brush faceBrush = new SolidBrush(faceColor))
+								{
+									if (zBufferEnabled)
+									{
+										DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen);
+									}
+									else
+									{
+										g.DrawPolygon(pen, points);
+									}
+								}
+							}
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
+						}
+					}
+				}
+
+			}
+
+
+			
+            
         }
 
 
@@ -258,101 +271,105 @@ namespace lab6
             g.DrawPolygon(pen, vertices.Select(v => v.pos).ToArray());
         }
 
-        private void DrawTriangleWithZBuffer(Graphics g, (PointF pos, float depth, Point3D worldPos, int index)[] triangle, Brush brush)
-        {
-            if (triangle.Length != 3) return;
+		private void DrawTriangleWithZBuffer(Graphics g, (PointF pos, float depth, Point3D worldPos, int index)[] triangle, 
+            Brush brush)
+		{
+			if (triangle.Length != 3) return;
 
-            float minX = Math.Min(Math.Min(triangle[0].pos.X, triangle[1].pos.X), triangle[2].pos.X);
-            float maxX = Math.Max(Math.Max(triangle[0].pos.X, triangle[1].pos.X), triangle[2].pos.X);
-            float minY = Math.Min(Math.Min(triangle[0].pos.Y, triangle[1].pos.Y), triangle[2].pos.Y);
-            float maxY = Math.Max(Math.Max(triangle[0].pos.Y, triangle[1].pos.Y), triangle[2].pos.Y);
+			float minX = Math.Min(Math.Min(triangle[0].pos.X, triangle[1].pos.X), triangle[2].pos.X);
+			float maxX = Math.Max(Math.Max(triangle[0].pos.X, triangle[1].pos.X), triangle[2].pos.X);
+			float minY = Math.Min(Math.Min(triangle[0].pos.Y, triangle[1].pos.Y), triangle[2].pos.Y);
+			float maxY = Math.Max(Math.Max(triangle[0].pos.Y, triangle[1].pos.Y), triangle[2].pos.Y);
 
-            int startX = Math.Max(0, (int)Math.Floor(minX));
-            int endX = Math.Min(zBuffer.Width - 1, (int)Math.Ceiling(maxX));
-            int startY = Math.Max(0, (int)Math.Floor(minY));
-            int endY = Math.Min(zBuffer.Height - 1, (int)Math.Ceiling(maxY));
+			int startX = Math.Max(0, (int)Math.Floor(minX));
+			int endX = Math.Min(zBuffer.Width - 1, (int)Math.Ceiling(maxX));
+			int startY = Math.Max(0, (int)Math.Floor(minY));
+			int endY = Math.Min(zBuffer.Height - 1, (int)Math.Ceiling(maxY));
 
-            PointF p0 = triangle[0].pos, p1 = triangle[1].pos, p2 = triangle[2].pos;
-            float z0 = triangle[0].depth, z1 = triangle[1].depth, z2 = triangle[2].depth;
+			PointF p0 = triangle[0].pos, p1 = triangle[1].pos, p2 = triangle[2].pos;
+			float z0 = triangle[0].depth, z1 = triangle[1].depth, z2 = triangle[2].depth;
 
-            float det = (p1.Y - p2.Y) * (p0.X - p2.X) + (p2.X - p1.X) * (p0.Y - p2.Y);
-            if (Math.Abs(det) < 1e-10f) return;
-            float invDet = 1.0f / det;
+			float det = (p1.Y - p2.Y) * (p0.X - p2.X) + (p2.X - p1.X) * (p0.Y - p2.Y);
+			if (Math.Abs(det) < 1e-10f) return;
+			float invDet = 1.0f / det;
 
-            Vector3 ColorToVec(Color c) => new Vector3(c.R / 255f, c.G / 255f, c.B / 255f);
-            Color VecToColor(Vector3 v)
-            {
-                v = Vector3.Clamp(v, Vector3.Zero, new Vector3(1, 1, 1));
-                return Color.FromArgb((int)(v.X * 255), (int)(v.Y * 255), (int)(v.Z * 255));
-            }
+			Vector3 ColorToVec(Color c) => new Vector3(c.R / 255f, c.G / 255f, c.B / 255f);
+			Color VecToColor(Vector3 v)
+			{
+				v = Vector3.Clamp(v, Vector3.Zero, new Vector3(1, 1, 1));
+				return Color.FromArgb((int)(v.X * 255), (int)(v.Y * 255), (int)(v.Z * 255));
+			}
 
-            Vector3[] vColors = new Vector3[3];
-            Vector3[] vNormals = new Vector3[3];
-            Vector3[] vWorldPos = new Vector3[3];
+			Vector3[] vColors = new Vector3[3];
+			Vector3[] vNormals = new Vector3[3];
+			Vector3[] vWorldPos = new Vector3[3];
 
-            for (int i = 0; i < 3; i++)
-            {
-                var t = triangle[i];
-                vWorldPos[i] = new Vector3((float)t.worldPos.X, (float)t.worldPos.Y, (float)t.worldPos.Z);
+			for (int i = 0; i < 3; i++)
+			{
+				var t = triangle[i];
+				vWorldPos[i] = new Vector3((float)t.worldPos.X, (float)t.worldPos.Y, (float)t.worldPos.Z);
 
-                if (currentPolyhedron.Normals != null && currentPolyhedron.Normals.Count > t.index)
-                {
-                    var vn = currentPolyhedron.Normals[t.index];
-                    vNormals[i] = Vector3.Normalize(new Vector3((float)vn.X, (float)vn.Y, (float)vn.Z));
-                }
-                else
-                {
-                    vNormals[i] = Vector3.UnitZ;
-                }
+				if (currentPolyhedron.Normals != null && currentPolyhedron.Normals.Count > t.index)
+				{
+					var vn = currentPolyhedron.Normals[t.index];
+					vNormals[i] = Vector3.Normalize(new Vector3((float)vn.X, (float)vn.Y, (float)vn.Z));
+				}
+				else
+				{
+					vNormals[i] = Vector3.UnitZ;
+				}
 
-                Vector3 lightDir = lightSource.GetDirectionTo(new Point3D(vWorldPos[i].X, vWorldPos[i].Y, vWorldPos[i].Z));
-                float diff = Math.Max(Vector3.Dot(vNormals[i], lightDir), 0f);
-                float intensity = currentPolyhedron.Material.AmbientIntensity + currentPolyhedron.Material.DiffuseIntensity * diff;
-                Vector3 baseCol = ColorToVec(currentPolyhedron.Material.DiffuseColor);
-                Vector3 lightCol = ColorToVec(lightSource.Color) * lightSource.Intensity;
-                vColors[i] = baseCol * intensity * lightCol;
-            }
+				Vector3 lightDir = lightSource.GetDirectionTo(new Point3D(vWorldPos[i].X, vWorldPos[i].Y, vWorldPos[i].Z));
+				float diff = Math.Max(Vector3.Dot(vNormals[i], lightDir), 0f);
+				float intensity = currentPolyhedron.Material.AmbientIntensity + currentPolyhedron.Material.DiffuseIntensity * diff;
+				Vector3 baseCol = ColorToVec(currentPolyhedron.Material.DiffuseColor);
+				Vector3 lightCol = ColorToVec(lightSource.Color) * lightSource.Intensity;
+				vColors[i] = baseCol * intensity * lightCol;
+			}
 
-            for (int y = startY; y <= endY; y++)
-            {
-                for (int x = startX; x <= endX; x++)
-                {
-                    float w0 = ((p1.Y - p2.Y) * (x - p2.X) + (p2.X - p1.X) * (y - p2.Y)) * invDet;
-                    float w1 = ((p2.Y - p0.Y) * (x - p2.X) + (p0.X - p2.X) * (y - p2.Y)) * invDet;
-                    float w2 = 1.0f - w0 - w1;
+			for (int y = startY; y <= endY; y++)
+			{
+				for (int x = startX; x <= endX; x++)
+				{
+					float w0 = ((p1.Y - p2.Y) * (x - p2.X) + (p2.X - p1.X) * (y - p2.Y)) * invDet;
+					float w1 = ((p2.Y - p0.Y) * (x - p2.X) + (p0.X - p2.X) * (y - p2.Y)) * invDet;
+					float w2 = 1.0f - w0 - w1;
 
-                    if (w0 >= -1e-4f && w1 >= -1e-4f && w2 >= -1e-4f)
-                    {
-                        float depth = w0 * z0 + w1 * z1 + w2 * z2;
-                        if (!zBuffer.TestAndSet(x, y, depth)) continue;
+					if (w0 >= -1e-4f && w1 >= -1e-4f && w2 >= -1e-4f)
+					{
+						float depth = w0 * z0 + w1 * z1 + w2 * z2; 
+                        depth = 1.0f - depth;
 
-                        Vector3 finalColorVec = new(0, 0, 0);
-                        switch (currShadingState)
-                        {
-                            case shadingState.off:
-                                finalColorVec = ColorToVec(((SolidBrush)brush).Color);
-                                break;
-                            case shadingState.guro:
-                                finalColorVec = vColors[0] * w0 + vColors[1] * w1 + vColors[2] * w2;
-                                break;
-                            case shadingState.phong:
-                                Vector3 interpNormal = Vector3.Normalize(vNormals[0] * w0 + vNormals[1] * w1 + vNormals[2] * w2);
-                                Vector3 interpPos = vWorldPos[0] * w0 + vWorldPos[1] * w1 + vWorldPos[2] * w2;
+						if (zBuffer.TestAndSet(x, y, depth))
+						{
+							Vector3 finalColorVec = new(0, 0, 0);
+							switch (currShadingState)
+							{
+								case shadingState.off:
+									finalColorVec = ColorToVec(((SolidBrush)brush).Color);
+									break;
+								case shadingState.guro:
+									finalColorVec = vColors[0] * w0 + vColors[1] * w1 + vColors[2] * w2;
+									break;
+								case shadingState.phong:
+									Vector3 interpNormal = Vector3.Normalize(vNormals[0] * w0 + vNormals[1] * w1 + vNormals[2] * w2);
+									Vector3 interpPos = vWorldPos[0] * w0 + vWorldPos[1] * w1 + vWorldPos[2] * w2;
 
-                                finalColorVec = ComputeCelShading(interpNormal, interpPos);
-                                break;
-                        }
+									finalColorVec = ComputeCelShading(interpNormal, interpPos);
+									break;
+							}
 
-                        Color finalColor = VecToColor(finalColorVec);
-                        using var pixelBrush = new SolidBrush(finalColor);
-                        g.FillRectangle(pixelBrush, x, y, 1, 1);
-                    }
-                }
-            }
-        }
+							Color finalColor = VecToColor(finalColorVec);
+							using var pixelBrush = new SolidBrush(finalColor);
+							g.FillRectangle(pixelBrush, x, y, 1, 1);
+						}
+					}
+				}
+			}
+		}
 
-        // Вычисление цвета грани по модели Ламберта
-        private Color CalculateFaceColor(List<int> face, Matrix4x4 rotationMatrix)
+		// Вычисление цвета грани по модели Ламберта
+		private Color CalculateFaceColor(List<int> face, Matrix4x4 rotationMatrix)
         {
             var v0 = currentPolyhedron.Vertices[face[0]];
             var v1 = currentPolyhedron.Vertices[face[1]];
