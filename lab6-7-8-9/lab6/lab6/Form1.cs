@@ -70,7 +70,7 @@ namespace lab6
 
 		private void PictureBox1_Paint(object sender, PaintEventArgs e)
 		{
-			e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+			e.Graphics.SmoothingMode = SmoothingMode.None;
 			e.Graphics.Clear(Color.White);
 
 			DrawCoordinateAxes(e.Graphics);
@@ -346,7 +346,6 @@ namespace lab6
 					if (w0 >= -1e-4f && w1 >= -1e-4f && w2 >= -1e-4f)
 					{
 						float depth = w0 * z0 + w1 * z1 + w2 * z2;
-						depth = 1.0f - depth;
 
 						if (zBuffer.TestAndSet(x, y, depth))
 						{

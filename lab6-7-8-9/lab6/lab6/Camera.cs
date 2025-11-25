@@ -85,17 +85,18 @@ namespace lab6
 			Matrix4x4 projection = GetProjectionMatrix();
 			transformed.Transform(projection);
 
-			float depth = (float)transformed.Z;
-
+			float depth = (float)Math.Sqrt(
+				(worldPoint.X - Position.X) * (worldPoint.X - Position.X) +
+				(worldPoint.Y - Position.Y) * (worldPoint.Y - Position.Y) +
+				(worldPoint.Z - Position.Z) * (worldPoint.Z - Position.Z)
+			);
 
 			if (transformed.W != 0)
 			{
 				transformed.X /= transformed.W;
 				transformed.Y /= transformed.W;
 				transformed.Z /= transformed.W;
-				depth /= (float)transformed.W;
 			}
-			depth = (depth + 1.0f) / 2.0f; // Приводим к диапазону [0, 1]
 
 			float scale = 80f * viewportScale;
 			float x = (float)(transformed.X * scale + screenWidth / 2);
