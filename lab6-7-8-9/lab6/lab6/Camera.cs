@@ -15,7 +15,7 @@ namespace lab6
 
         public double RotateX { get; set; } = 30.0;
         public double RotateY { get; set; } = 45.0;
-        public Vector3 Position { get; set; } = new Vector3(0, 0, 5);
+        public Vector3 Position { get; set; } = new Vector3(0, 0, 10);
         public Vector3 Target { get; set; } = new Vector3(0, 0, 0);
 
         public Camera()
@@ -85,11 +85,10 @@ namespace lab6
 			Matrix4x4 projection = GetProjectionMatrix();
 			transformed.Transform(projection);
 
-			// Вычисляем глубину как расстояние до камеры
 			float depth = (float)Math.Sqrt(
-				worldPoint.X * worldPoint.X +
-				worldPoint.Y * worldPoint.Y +
-				worldPoint.Z * worldPoint.Z
+				(worldPoint.X - Position.X) * (worldPoint.X - Position.X) +
+				(worldPoint.Y - Position.Y) * (worldPoint.Y - Position.Y) +
+				(worldPoint.Z - Position.Z) * (worldPoint.Z - Position.Z)
 			);
 
 			if (transformed.W != 0)
