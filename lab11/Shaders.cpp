@@ -4,8 +4,11 @@
 
 using namespace std;
 
-GLuint Program;
+GLuint Program;     
+GLuint ProgramUniform; 
 GLint Attrib_coord;
+GLint Attrib_coord_uniform;
+GLint Uniform_color;
 
 const char* VertexShaderSource = R"(
 #version 330 core
@@ -15,11 +18,20 @@ void main() {
 }
 )";
 
-const char* FragShaderSource = R"(
+const char* FragShaderSourceConst = R"(
 #version 330 core
 out vec4 color;
 void main() {
-    color = vec4(0.0, 0.7, 1.0, 1.0);
+    color = vec4(0.0, 0.7, 1.0, 1.0); 
+}
+)";
+
+const char* FragShaderSourceUniform = R"(
+#version 330 core
+uniform vec4 u_color;
+out vec4 color;
+void main() {
+    color = u_color; 
 }
 )";
 
@@ -44,15 +56,26 @@ void InitShader()
     glCompileShader(vs);
     CheckShader(vs);
 
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &FragShaderSource, NULL);
-    glCompileShader(fs);
-    CheckShader(fs);
+    GLuint fs_const = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs_const, 1, &FragShaderSourceConst, NULL);
+    glCompileShader(fs_const);
+    CheckShader(fs_const);
 
     Program = glCreateProgram();
     glAttachShader(Program, vs);
-    glAttachShader(Program, fs);
+    glAttachShader(Program, fs_const);
     glLinkProgram(Program);
-
     Attrib_coord = glGetAttribLocation(Program, "coord");
+
+    GLuint fs_uniform = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs_uniform, 1, &FragShaderSourceUniform, NULL);
+    glCompileShader(fs_uniform);
+    CheckShader(fs_uniform);
+
+    ProgramUniform = glCreateProgram();
+    glAttachShader(ProgramUniform, vs);
+    glAttachShader(ProgramUniform, fs_uniform);
+    glLinkProgram(ProgramUniform);
+    Attrib_coord_uniform = glGetAttribLocation(ProgramUniform, "coord");
+    Uniform_color = glGetUniformLocation(ProgramUniform, "u_color");
 }

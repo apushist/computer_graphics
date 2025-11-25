@@ -11,6 +11,13 @@ int currentFigure = 0;
 
 struct Vertex { float x, y; };
 
+void SetColor(float r, float g, float b, float a)
+{
+    glUseProgram(ProgramUniform);
+    glUniform4f(Uniform_color, r, g, b, a);
+    glUseProgram(0);
+}
+
 void InitQuad()
 {
     Vertex quad[4] =
@@ -66,13 +73,21 @@ void InitPentagon()
 void Draw(GLenum mode, int count)
 {
     glUseProgram(Program);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glEnableVertexAttribArray(Attrib_coord);
     glVertexAttribPointer(Attrib_coord, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
     glDrawArrays(mode, 0, count);
-
     glDisableVertexAttribArray(Attrib_coord);
+    glUseProgram(0);
+}
+
+void DrawUniform(GLenum mode, int count)
+{
+    glUseProgram(ProgramUniform);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glEnableVertexAttribArray(Attrib_coord_uniform);
+    glVertexAttribPointer(Attrib_coord_uniform, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glDrawArrays(mode, 0, count);
+    glDisableVertexAttribArray(Attrib_coord_uniform);
     glUseProgram(0);
 }
