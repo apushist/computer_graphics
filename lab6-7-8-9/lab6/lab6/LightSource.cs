@@ -6,14 +6,14 @@ namespace lab6
 	{
 		public Point3D Position { get; set; } = new Point3D(3,3,3);
 		public Color Color { get; set; } = Color.White;
-		public float Intensity { get; set; } = 1.0f;
+		public float Intensity { get; set; } = 1.2f;
 
 		public Vector3 GetDirectionTo(Point3D point)
 		{
 			Vector3 direction = new Vector3(
-				(float)(Position.X - point.X),
-				(float)(Position.Y - point.Y),
-				(float)(Position.Z - point.Z)
+				(float)(point.X - Position.X), 
+				(float)(point.Y - Position.Y),
+				(float)(point.Z - Position.Z)
 			);
 			return Vector3.Normalize(direction);
 		}
