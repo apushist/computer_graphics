@@ -144,24 +144,24 @@ namespace lab6
 
             poly.Vertices.AddRange(
             [
-                new Point3D(-s, -s, -s), 
-                new Point3D(s, -s, -s), 
-                new Point3D(s, s, -s), 
-                new Point3D(-s, s, -s), 
                 new Point3D(-s, -s, s),
-                new Point3D(s, -s, s),  
+				new Point3D(-s, s, s), 
+                new Point3D(-s, -s, -s), 
+                new Point3D(-s, s, -s), 
+                new Point3D(s, -s, s), 
                 new Point3D(s, s, s),  
-                new Point3D(-s, s, s) 
+                new Point3D(s, -s, -s),  
+                new Point3D(s, s, -s) 
                     ]);
 
             poly.Faces.AddRange(
             [
-                new List<int> { 0, 3, 2, 1 }, 
-        new List<int> { 4, 5, 6, 7 }, 
-        new List<int> { 0, 4, 7, 3 },  
-        new List<int> { 1, 2, 6, 5 },
-        new List<int> { 0, 1, 5, 4 }, 
-        new List<int> { 3, 7, 6, 2 }  
+                new List<int> { 0, 1, 3, 2 }, 
+        new List<int> { 2, 3, 7, 6 }, 
+        new List<int> { 6, 7, 5, 4 },  
+        new List<int> { 4, 5, 1, 0 },
+        new List<int> { 2, 6, 4, 0 }, 
+        new List<int> { 7, 3, 1, 5 }  
             ]);
 
             poly.CalculateTextureCoords();
