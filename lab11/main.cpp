@@ -14,6 +14,7 @@ int main()
     InitQuad();
 
     bool useUniformColor = false; 
+    bool useGradientColor = false;
     SetColor(1.0f, 0.0f, 0.0f); 
 
     while (window.isOpen())
@@ -32,31 +33,39 @@ int main()
                     InitQuad();
                     currentFigure = 0;
                 }
-                if (key == sf::Keyboard::Scan::Num2)
+                else if (key == sf::Keyboard::Scan::Num2)
                 {
                     InitFan();
                     currentFigure = 1;
                 }
-                if (key == sf::Keyboard::Scan::Num3)
+                else if (key == sf::Keyboard::Scan::Num3)
                 {
                     InitPentagon();
                     currentFigure = 2;
                 }
-
-                if (key == sf::Keyboard::Scan::Num4)
+                else if (key == sf::Keyboard::Scan::Num4)
                 {
                     useUniformColor = false;
+                    useGradientColor = false;
                 }
-                if (key == sf::Keyboard::Scan::Num5)
+                else if (key == sf::Keyboard::Scan::Num5)
                 {
                     useUniformColor = true; 
                     SetColor(1.0f, 0.0f, 0.0f); 
+                    useGradientColor = false;
                 }
-                if (key == sf::Keyboard::Scan::Num6)
+                else if (key == sf::Keyboard::Scan::Num6)
                 {
                     useUniformColor = true; 
-                    SetColor(0.0f, 1.0f, 0.0f); 
+                    SetColor(0.0f, 1.0f, 0.0f);
+                    useGradientColor = false;
                 }
+                else if (key == sf::Keyboard::Scan::Num7)
+                {
+                    useUniformColor = false;
+                    useGradientColor = true;
+                }
+
             }
         }
 
@@ -64,17 +73,20 @@ int main()
 
         if (currentFigure == 0)
         {
-            if (useUniformColor) DrawUniform(GL_TRIANGLE_FAN, 4);
+            if (useGradientColor) DrawGradient(GL_TRIANGLE_FAN, 4);
+            else if (useUniformColor) DrawUniform(GL_TRIANGLE_FAN, 4);
             else Draw(GL_TRIANGLE_FAN, 4);
         }
-        if (currentFigure == 1)
+        else if (currentFigure == 1)
         {
-            if (useUniformColor) DrawUniform(GL_TRIANGLE_FAN, 6);
+            if (useGradientColor) DrawGradient(GL_TRIANGLE_FAN, 6);
+            else if (useUniformColor) DrawUniform(GL_TRIANGLE_FAN, 6);
             else Draw(GL_TRIANGLE_FAN, 6);
         }
-        if (currentFigure == 2)
+        else if (currentFigure == 2)
         {
-            if (useUniformColor) DrawUniform(GL_TRIANGLE_FAN, 5);
+            if (useGradientColor) DrawGradient(GL_TRIANGLE_FAN, 5);
+            else if (useUniformColor) DrawUniform(GL_TRIANGLE_FAN, 5);
             else Draw(GL_TRIANGLE_FAN, 5);
         }
 
