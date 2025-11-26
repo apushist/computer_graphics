@@ -12,72 +12,42 @@ namespace lab6
 
         public List<PointF> TextureCoords { get; set; } = new List<PointF>();
 
-        public void CalculateTextureCoords()
+        
+        public void CalculateSphericalTextureCoords()
         {
             TextureCoords.Clear();
 
-            if (Name == "Гексаэдр") 
-            {
-                CalculateCubeTextureCoords();
-            }
-            else
-            {
-                foreach (var vertex in Vertices)
-                {
-                    float u = (float)(0.5 + Math.Atan2(vertex.Z, vertex.X) / (2 * Math.PI));
-                    float v = (float)(0.5 - Math.Asin(vertex.Y) / Math.PI);
-                    TextureCoords.Add(new PointF(u, v));
-                }
-            }
-        }
-
-        private void CalculateCubeTextureCoords()
-        {
             foreach (var vertex in Vertices)
             {
-                float u, v;
+                double length = Math.Sqrt(vertex.X * vertex.X + vertex.Y * vertex.Y + vertex.Z * vertex.Z);
+                if (length < 1e-10)
+                {
+                    TextureCoords.Add(new PointF(0.5f, 0.5f));
+                    continue;
+                }
 
+                double nx = vertex.X / length;
+                double ny = vertex.Y / length;
+                double nz = vertex.Z / length;
 
-                if (Math.Abs(vertex.X - 1.0) < 0.01) 
-                {
-                    u = (float)((vertex.Z + 1) / 2);
-                    v = (float)((vertex.Y + 1) / 2);
-                }
-                else if (Math.Abs(vertex.X + 1.0) < 0.01) 
-                {
-                    u = (float)((1 - vertex.Z) / 2);
-                    v = (float)((vertex.Y + 1) / 2);
-                }
-                else if (Math.Abs(vertex.Y - 1.0) < 0.01) 
-                {
-                    u = (float)((vertex.X + 1) / 2);
-                    v = (float)((vertex.Z + 1) / 2); 
-                }
-                else if (Math.Abs(vertex.Y + 1.0) < 0.01) 
-                {
-                    u = (float)((vertex.X + 1) / 2);
-                    v = (float)((1 - vertex.Z) / 2);
-                }
-                else if (Math.Abs(vertex.Z - 1.0) < 0.01) 
-                {
-                    u = (float)((1 - vertex.X) / 2);
-                    v = (float)((vertex.Y + 1) / 2);
-                }
-                else if (Math.Abs(vertex.Z + 1.0) < 0.01) 
-                {
-                    u = (float)((vertex.X + 1) / 2);
-                    v = (float)((vertex.Y + 1) / 2);
-                }
-                else
-                {
-                    u = 0.5f;
-                    v = 0.5f;
-                }
+                float u = (float)(0.5 + Math.Atan2(nz, nx) / (2 * Math.PI));
+                float v = (float)(0.5 - Math.Asin(ny) / Math.PI);
 
                 TextureCoords.Add(new PointF(u, v));
             }
         }
 
+        public void CalculateTextureCoords()
+        {
+            TextureCoords.Clear();
+
+            foreach (var vertex in Vertices)
+            {
+                float u = (float)((vertex.X + 1) / 2);
+                float v = (float)((vertex.Y + 1) / 2);
+                TextureCoords.Add(new PointF(u, v));
+            }
+        }
 
         public Polyhedron()
 		{
@@ -144,24 +114,24 @@ namespace lab6
 
             poly.Vertices.AddRange(
             [
-                new Point3D(-s, -s, s),
-				new Point3D(-s, s, s), 
-                new Point3D(-s, -s, -s), 
-                new Point3D(-s, s, -s), 
-                new Point3D(s, -s, s), 
-                new Point3D(s, s, s),  
-                new Point3D(s, -s, -s),  
-                new Point3D(s, s, -s) 
-                    ]);
+                new Point3D(-s, -s, s),   
+				new Point3D(-s, s, s),    
+				new Point3D(-s, -s, -s), 
+				new Point3D(-s, s, -s),  
+				new Point3D(s, -s, s),  
+				new Point3D(s, s, s),   
+				new Point3D(s, -s, -s),  
+				new Point3D(s, s, -s)   
+            ]);
 
             poly.Faces.AddRange(
             [
                 new List<int> { 0, 1, 3, 2 }, 
-        new List<int> { 2, 3, 7, 6 }, 
-        new List<int> { 6, 7, 5, 4 },  
-        new List<int> { 4, 5, 1, 0 },
-        new List<int> { 2, 6, 4, 0 }, 
-        new List<int> { 7, 3, 1, 5 }  
+				new List<int> { 2, 3, 7, 6 }, 
+				new List<int> { 6, 7, 5, 4 }, 
+				new List<int> { 4, 5, 1, 0 }, 
+				new List<int> { 2, 6, 4, 0 },
+				new List<int> { 7, 3, 1, 5 }  
             ]);
 
             poly.CalculateTextureCoords();

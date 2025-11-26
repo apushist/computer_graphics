@@ -9,49 +9,44 @@ namespace lab6
 {
     public class Texture
     {
-        public Bitmap Bitmap { get; set; }
-        public string Name { get; set; }
+        public Bitmap Bitmap { get; private set; }
+        public int Width => Bitmap?.Width ?? 0;
+        public int Height => Bitmap?.Height ?? 0;
 
-        public Texture()
-        {
-        }
-
-        public Texture(Bitmap bitmap, string name = "")
+        public Texture(Bitmap bitmap)
         {
             Bitmap = bitmap;
-            Name = name;
         }
 
         public static Texture CreateTestTexture()
         {
             int size = 256;
-            Bitmap bmp = new Bitmap(size, size);
+            var bitmap = new Bitmap(size, size);
 
-            using (Graphics g = Graphics.FromImage(bmp))
+            using (var g = Graphics.FromImage(bitmap))
+            using (var brush1 = new SolidBrush(Color.Red))
+            using (var brush2 = new SolidBrush(Color.Blue))
+            using (var brush3 = new SolidBrush(Color.Green))
+            using (var brush4 = new SolidBrush(Color.Yellow))
             {
-                int tileSize = 32;
-                for (int y = 0; y < size; y += tileSize)
-                {
-                    for (int x = 0; x < size; x += tileSize)
-                    {
-                        bool isBlack = ((x / tileSize + y / tileSize) % 2) == 0;
-                        Color color = isBlack ? Color.Black : Color.White;
-
-                        using (var brush = new SolidBrush(color))
-                        {
-                            g.FillRectangle(brush, x, y, tileSize, tileSize);
-                        }
-                    }
-                }
-
-                using (var pen = new Pen(Color.Red, 4))
-                {
-                    g.DrawLine(pen, 0, 0, size, size);
-                    g.DrawLine(pen, size, 0, 0, size);
-                }
+                g.FillRectangle(brush1, 0, 0, size / 2, size / 2);
+                g.FillRectangle(brush2, size / 2, 0, size / 2, size / 2);
+                g.FillRectangle(brush3, 0, size / 2, size / 2, size / 2);
+                g.FillRectangle(brush4, size / 2, size / 2, size / 2, size / 2);
             }
 
-            return new Texture { Bitmap = bmp };
+            return new Texture(bitmap);
+        }
+
+        public static Texture FromFile(string filePath)
+        {
+            var bitmap = new Bitmap(filePath);
+            return new Texture(bitmap);
+        }
+
+        public void Dispose()
+        {
+            Bitmap?.Dispose();
         }
     }
 }

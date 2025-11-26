@@ -231,5 +231,52 @@ namespace lab6
 			result.Normalize();
 			return result;
 		}
-	}
+
+        public double M11 { get { return data[0, 0]; } set { data[0, 0] = value; } }
+        public double M12 { get { return data[0, 1]; } set { data[0, 1] = value; } }
+        public double M13 { get { return data[0, 2]; } set { data[0, 2] = value; } }
+        public double M14 { get { return data[0, 3]; } set { data[0, 3] = value; } }
+
+        public double M21 { get { return data[1, 0]; } set { data[1, 0] = value; } }
+        public double M22 { get { return data[1, 1]; } set { data[1, 1] = value; } }
+        public double M23 { get { return data[1, 2]; } set { data[1, 2] = value; } }
+        public double M24 { get { return data[1, 3]; } set { data[1, 3] = value; } }
+
+        public double M31 { get { return data[2, 0]; } set { data[2, 0] = value; } }
+        public double M32 { get { return data[2, 1]; } set { data[2, 1] = value; } }
+        public double M33 { get { return data[2, 2]; } set { data[2, 2] = value; } }
+        public double M34 { get { return data[2, 3]; } set { data[2, 3] = value; } }
+
+        public double M41 { get { return data[3, 0]; } set { data[3, 0] = value; } }
+        public double M42 { get { return data[3, 1]; } set { data[3, 1] = value; } }
+        public double M43 { get { return data[3, 2]; } set { data[3, 2] = value; } }
+        public double M44 { get { return data[3, 3]; } set { data[3, 3] = value; } }
+
+        public static Matrix4x4 Transpose(Matrix4x4 matrix)
+        {
+            var result = new Matrix4x4();
+
+            result.data[0, 0] = matrix.data[0, 0];
+            result.data[0, 1] = matrix.data[1, 0];
+            result.data[0, 2] = matrix.data[2, 0];
+            result.data[0, 3] = matrix.data[3, 0];
+
+            result.data[1, 0] = matrix.data[0, 1];
+            result.data[1, 1] = matrix.data[1, 1];
+            result.data[1, 2] = matrix.data[2, 1];
+            result.data[1, 3] = matrix.data[3, 1];
+
+            result.data[2, 0] = matrix.data[0, 2];
+            result.data[2, 1] = matrix.data[1, 2];
+            result.data[2, 2] = matrix.data[2, 2];
+            result.data[2, 3] = matrix.data[3, 2];
+
+            result.data[3, 0] = matrix.data[0, 3];
+            result.data[3, 1] = matrix.data[1, 3];
+            result.data[3, 2] = matrix.data[2, 3];
+            result.data[3, 3] = matrix.data[3, 3];
+
+            return result;
+        }
+    }
 }
