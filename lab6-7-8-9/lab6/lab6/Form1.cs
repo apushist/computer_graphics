@@ -91,174 +91,174 @@ namespace lab6
 			}
 		}
 
-        public void DrawPolyherdon(Graphics g, int screenWidth, int screenHeight)
-        {
-            if (currentPolyhedron == null || currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0)
-                return;
-            var polyhedronsToDraw = new List<Polyhedron> { currentPolyhedron };
+		public void DrawPolyherdon(Graphics g, int screenWidth, int screenHeight)
+		{
+			if (currentPolyhedron == null || currentPolyhedron.Vertices.Count == 0 || currentPolyhedron.Faces.Count == 0)
+				return;
+			var polyhedronsToDraw = new List<Polyhedron> { currentPolyhedron };
 
-            if (usingSecondPolyhedron)
-            {
-                var secondPolyhedron = Polyhedron.CreateHexahedron();
-                secondPolyhedron.Material.DiffuseColor = Color.Blue;
-                var translation = Matrix4x4.CreateTranslation(3, 0, 0);
-                secondPolyhedron.Transform(translation);
-                polyhedronsToDraw.Add(secondPolyhedron);
-            }
+			if (usingSecondPolyhedron)
+			{
+				var secondPolyhedron = Polyhedron.CreateIcosahedron();
+				secondPolyhedron.Material.DiffuseColor = Color.Blue;
+				var translation = Matrix4x4.CreateTranslation(3, 0, 0);
+				secondPolyhedron.Transform(translation);
+				polyhedronsToDraw.Add(secondPolyhedron);
+			}
 
-            if (zBufferEnabled)
-            {
-                if (zBuffer == null || screenWidth != zBuffer.Width || screenHeight != zBuffer.Height)
-                {
-                    zBuffer = new ZBuffer(screenWidth, screenHeight);
-                }
-                zBuffer.Clear();
-            }
+			if (zBufferEnabled)
+			{
+				if (zBuffer == null || screenWidth != zBuffer.Width || screenHeight != zBuffer.Height)
+				{
+					zBuffer = new ZBuffer(screenWidth, screenHeight);
+				}
+				zBuffer.Clear();
+			}
 
-            float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
+			float maxCoord = Math.Max(screenWidth, screenHeight) * 2f;
 
-            foreach (var polyhedron in polyhedronsToDraw)
-            {
-                if (polyhedron.Vertices.Count == 0 || polyhedron.Faces.Count == 0)
-                    continue;
+			foreach (var polyhedron in polyhedronsToDraw)
+			{
+				if (polyhedron.Vertices.Count == 0 || polyhedron.Faces.Count == 0)
+					continue;
 
-                if (polyhedron.Normals.Count == 0)
-                {
-                    polyhedron.CalculateVertexNormals();
-                }
+				if (polyhedron.Normals.Count == 0)
+				{
+					polyhedron.CalculateVertexNormals();
+				}
 
-                using (Pen pen = new Pen(polyhedron.Material.DiffuseColor, 2))
-                {
-                    Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
-                    Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
-                    Matrix4x4 rotationMatrix = rotY * rotX;
+				using (Pen pen = new Pen(polyhedron.Material.DiffuseColor, 2))
+				{
+					Matrix4x4 rotX = Matrix4x4.CreateRotationX(camera.RotateX * Math.PI / 180.0);
+					Matrix4x4 rotY = Matrix4x4.CreateRotationY(camera.RotateY * Math.PI / 180.0);
+					Matrix4x4 rotationMatrix = rotY * rotX;
 
-                    Vector3 view;
-                    if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
-                    {
-                        view = Vector3.Normalize(camera.Target - camera.Position);
-                    }
-                    else
-                    {
-                        view = new Vector3(0, 0, -1);
-                    }
+					Vector3 view;
+					if (camera.CurrentProjection == Camera.ProjectionType.Perspective)
+					{
+						view = Vector3.Normalize(camera.Target - camera.Position);
+					}
+					else
+					{
+						view = new Vector3(0, 0, -1);
+					}
 
-                    var sortedFaces = new List<(List<int> face, double depth, bool isVisible)>();
+					var sortedFaces = new List<(List<int> face, double depth, bool isVisible)>();
 
-                    foreach (var face in polyhedron.Faces)
-                    {
-                        if (face.Count < 3) continue;
+					foreach (var face in polyhedron.Faces)
+					{
+						if (face.Count < 3) continue;
 
-                        bool isVisible = true;
+						bool isVisible = true;
 
-                        var v0 = polyhedron.Vertices[face[0]];
-                        var v1 = polyhedron.Vertices[face[1]];
-                        var v2 = polyhedron.Vertices[face[2]];
+						var v0 = polyhedron.Vertices[face[0]];
+						var v1 = polyhedron.Vertices[face[1]];
+						var v2 = polyhedron.Vertices[face[2]];
 
-                        var a = new Vector3((float)(v1.X - v0.X), (float)(v1.Y - v0.Y), (float)(v1.Z - v0.Z));
-                        var b = new Vector3((float)(v2.X - v0.X), (float)(v2.Y - v0.Y), (float)(v2.Z - v0.Z));
+						var a = new Vector3((float)(v1.X - v0.X), (float)(v1.Y - v0.Y), (float)(v1.Z - v0.Z));
+						var b = new Vector3((float)(v2.X - v0.X), (float)(v2.Y - v0.Y), (float)(v2.Z - v0.Z));
 
-                        var normal = Vector3.Cross(a, b);
-                        Vector3 transformedNormal = normal;
+						var normal = Vector3.Cross(a, b);
+						Vector3 transformedNormal = normal;
 
-                        if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
-                        {
-                            transformedNormal = rotationMatrix.TransformVector(normal);
-                        }
+						if (camera.CurrentProjection == Camera.ProjectionType.Axonometric)
+						{
+							transformedNormal = rotationMatrix.TransformVector(normal);
+						}
 
-                        float dot = Vector3.Dot(transformedNormal, view);
-                        isVisible = dot < 0; // Грань видима если нормаль направлена от камеры
+						float dot = Vector3.Dot(transformedNormal, view);
+						isVisible = dot < 0; // Грань видима если нормаль направлена от камеры
 
-                        if (isVisible)
-                        {
-                            double avgDepth = 0;
-                            foreach (int vertexIndex in face)
-                            {
-                                var vertex = polyhedron.Vertices[vertexIndex];
-                                avgDepth += vertex.Z;
-                            }
-                            avgDepth /= face.Count;
+						if (isVisible)
+						{
+							double avgDepth = 0;
+							foreach (int vertexIndex in face)
+							{
+								var vertex = polyhedron.Vertices[vertexIndex];
+								avgDepth += vertex.Z;
+							}
+							avgDepth /= face.Count;
 
-                            sortedFaces.Add((face, avgDepth, isVisible));
-                        }
-                    }
+							sortedFaces.Add((face, avgDepth, isVisible));
+						}
+					}
 
-                    if (!zBufferEnabled)
-                    {
-                        sortedFaces = sortedFaces.OrderByDescending(f => f.depth).ToList();
-                    }
+					if (!zBufferEnabled)
+					{
+						sortedFaces = sortedFaces.OrderByDescending(f => f.depth).ToList();
+					}
 
-                    foreach (var (face, depth, isVisible) in sortedFaces)
-                    {
-                        if (!isVisible) continue;
+					foreach (var (face, depth, isVisible) in sortedFaces)
+					{
+						if (!isVisible) continue;
 
-                        Color faceColor = Color.White;
-                        switch (currShadingState)
-                        {
-                            case shadingState.off:
-                                faceColor = polyhedron.Material.DiffuseColor;
-                                break;
-                            case shadingState.guro:
-                                faceColor = CalculateFaceColor(face, rotationMatrix, polyhedron);
-                                break;
-                            case shadingState.phong:
-                                faceColor = Color.White;
-                                break;
-                        }
+						Color faceColor = Color.White;
+						switch (currShadingState)
+						{
+							case shadingState.off:
+								faceColor = polyhedron.Material.DiffuseColor;
+								break;
+							case shadingState.guro:
+								faceColor = CalculateFaceColor(face, rotationMatrix, polyhedron);
+								break;
+							case shadingState.phong:
+								faceColor = Color.White;
+								break;
+						}
 
-                        var points = new PointF[face.Count];
-                        bool validFace = true;
+						var points = new PointF[face.Count];
+						bool validFace = true;
 
-                        for (int i = 0; i < face.Count; i++)
-                        {
-                            var vertex = polyhedron.Vertices[face[i]];
-                            points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
+						for (int i = 0; i < face.Count; i++)
+						{
+							var vertex = polyhedron.Vertices[face[i]];
+							points[i] = viewport.WorldToScreen(vertex, camera, screenWidth, screenHeight);
 
-                            if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
-                            {
-                                validFace = false;
-                                break;
-                            }
-                        }
+							if (Math.Abs(points[i].X) > maxCoord || Math.Abs(points[i].Y) > maxCoord)
+							{
+								validFace = false;
+								break;
+							}
+						}
 
-                        if (!validFace) continue;
+						if (!validFace) continue;
 
-                        try
-                        {
-                            if (isTexturingEnabled && currentTexture != null)
-                            {
-                                var texCoords = CalculateDynamicTextureCoords(face, polyhedron.Vertices);
-                                DrawTexturedFace(g, face, points, texCoords, polyhedron);
-                            }
-                            else
-                            {
-                                using (Brush faceBrush = new SolidBrush(faceColor))
-                                {
-                                    if (zBufferEnabled)
-                                    {
-                                        DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen, polyhedron);
-                                    }
-                                    else
-                                    {
-                                        g.FillPolygon(faceBrush, points);
-                                        g.DrawPolygon(pen, points);
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
-                        }
-                    }
-                }
-            }
+						try
+						{
+							if (isTexturingEnabled && currentTexture != null)
+							{
+								var texCoords = CalculateDynamicTextureCoords(face, polyhedron.Vertices);
+								DrawTexturedFace(g, face, points, texCoords, polyhedron);
+							}
+							else
+							{
+								using (Brush faceBrush = new SolidBrush(faceColor))
+								{
+									if (zBufferEnabled)
+									{
+										DrawPolygonWithZBuffer(g, points, face, screenWidth, screenHeight, faceBrush, pen, polyhedron);
+									}
+									else
+									{
+										g.FillPolygon(faceBrush, points);
+										g.DrawPolygon(pen, points);
+									}
+								}
+							}
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine($"Ошибка отрисовки: {ex.Message}");
+						}
+					}
+				}
+			}
 
-            DrawLightSource(g, screenWidth, screenHeight);
-        }
+			DrawLightSource(g, screenWidth, screenHeight);
+		}
 
 
-        private void DrawPolygonWithZBuffer(Graphics g, PointF[] points, List<int> face,
+		private void DrawPolygonWithZBuffer(Graphics g, PointF[] points, List<int> face,
 	int screenWidth, int screenHeight, Brush brush, Pen pen, Polyhedron polyhedron)
 		{
 			if (face.Count < 3) return;
@@ -657,9 +657,9 @@ namespace lab6
 			InitializePoints();
 			AxisPointA = null;
 			AxisPointB = null;
-            isTexturingEnabled = false;
-            currentTexture = null;
-            pictureBox1.Invalidate();
+			isTexturingEnabled = false;
+			currentTexture = null;
+			pictureBox1.Invalidate();
 		}
 
 		private void BtnSwitchProjection_Click(object sender, EventArgs e)
@@ -945,185 +945,185 @@ namespace lab6
 			}
 		}
 
-        private void ButtonTexture_Click(object sender, EventArgs e)
-        {
-            if (currentPolyhedron == null)
-            {
-                MessageBox.Show("Сначала выберите или создайте фигуру", "Внимание",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+		private void ButtonTexture_Click(object sender, EventArgs e)
+		{
+			if (currentPolyhedron == null)
+			{
+				MessageBox.Show("Сначала выберите или создайте фигуру", "Внимание",
+					MessageBoxButtons.OK, MessageBoxIcon.Information);
+				return;
+			}
 
-            using (var textureForm = new TextureSettingsForm())
-            {
-                if (textureForm.ShowDialog() == DialogResult.OK)
-                {
-                    currentTexture = textureForm.SelectedTexture;
-                    isTexturingEnabled = true;
+			using (var textureForm = new TextureSettingsForm())
+			{
+				if (textureForm.ShowDialog() == DialogResult.OK)
+				{
+					currentTexture = textureForm.SelectedTexture;
+					isTexturingEnabled = true;
 
-                    pictureBox1.Invalidate();
+					pictureBox1.Invalidate();
 
-                }
-            }
-        }
+				}
+			}
+		}
 
-        private List<PointF> CalculateDynamicTextureCoords(List<int> face, List<Point3D> vertices)
+		private List<PointF> CalculateDynamicTextureCoords(List<int> face, List<Point3D> vertices)
 		{
 			var worldPoints = face.Select(idx => vertices[idx]).ToList();
 			Matrix4x4 inverseRotation = Matrix4x4.Transpose(objectRotation);
 			return CalculateFaceTextureCoordinates(worldPoints, inverseRotation);
 		}
 
-        private void DrawTexturedFace(Graphics g, List<int> face, PointF[] screenPoints, List<PointF> texCoords, Polyhedron polyhedron)
-        {
-            if (currentTexture == null || currentTexture.Bitmap == null)
-            {
-                using (var brush = new SolidBrush(polyhedron.Material.DiffuseColor))
-                using (var pen = new Pen(Color.DarkGray, 1))
-                {
-                    g.FillPolygon(brush, screenPoints);
-                    g.DrawPolygon(pen, screenPoints);
-                }
-                return;
-            }
+		private void DrawTexturedFace(Graphics g, List<int> face, PointF[] screenPoints, List<PointF> texCoords, Polyhedron polyhedron)
+		{
+			if (currentTexture == null || currentTexture.Bitmap == null)
+			{
+				using (var brush = new SolidBrush(polyhedron.Material.DiffuseColor))
+				using (var pen = new Pen(Color.DarkGray, 1))
+				{
+					g.FillPolygon(brush, screenPoints);
+					g.DrawPolygon(pen, screenPoints);
+				}
+				return;
+			}
 
-            try
-            {
-                using (var textureBrush = new TextureBrush(currentTexture.Bitmap))
-                {
-                    textureBrush.WrapMode = WrapMode.Tile;
+			try
+			{
+				using (var textureBrush = new TextureBrush(currentTexture.Bitmap))
+				{
+					textureBrush.WrapMode = WrapMode.Tile;
 
-                    SetupFaceTextureMapping(textureBrush, texCoords, screenPoints);
+					SetupFaceTextureMapping(textureBrush, texCoords, screenPoints);
 
-                    g.FillPolygon(textureBrush, screenPoints);
-                }
+					g.FillPolygon(textureBrush, screenPoints);
+				}
 
-                using (var pen = new Pen(Color.FromArgb(100, Color.Black), 1))
-                {
-                    g.DrawPolygon(pen, screenPoints);
-                }
-            }
-            catch (Exception ex)
-            {
-                using (var brush = new SolidBrush(polyhedron.Material.DiffuseColor))
-                using (var pen = new Pen(Color.DarkGray, 1))
-                {
-                    g.FillPolygon(brush, screenPoints);
-                    g.DrawPolygon(pen, screenPoints);
-                }
-            }
-        }
+				using (var pen = new Pen(Color.FromArgb(100, Color.Black), 1))
+				{
+					g.DrawPolygon(pen, screenPoints);
+				}
+			}
+			catch (Exception ex)
+			{
+				using (var brush = new SolidBrush(polyhedron.Material.DiffuseColor))
+				using (var pen = new Pen(Color.DarkGray, 1))
+				{
+					g.FillPolygon(brush, screenPoints);
+					g.DrawPolygon(pen, screenPoints);
+				}
+			}
+		}
 
-        private List<PointF> CalculateFaceTextureCoordinates(List<Point3D> worldPoints, Matrix4x4 inverseRotation)
-        {
-            var texCoords = new List<PointF>();
+		private List<PointF> CalculateFaceTextureCoordinates(List<Point3D> worldPoints, Matrix4x4 inverseRotation)
+		{
+			var texCoords = new List<PointF>();
 
-            var localPoints = worldPoints.Select(p =>
-            {
-                var pointCopy = new Point3D(p.X, p.Y, p.Z, p.W);
-                pointCopy.Transform(inverseRotation);
-                return pointCopy;
-            }).ToList();
+			var localPoints = worldPoints.Select(p =>
+			{
+				var pointCopy = new Point3D(p.X, p.Y, p.Z, p.W);
+				pointCopy.Transform(inverseRotation);
+				return pointCopy;
+			}).ToList();
 
-            double minX = localPoints.Min(p => p.X);
-            double maxX = localPoints.Max(p => p.X);
-            double minY = localPoints.Min(p => p.Y);
-            double maxY = localPoints.Max(p => p.Y);
-            double minZ = localPoints.Min(p => p.Z);
-            double maxZ = localPoints.Max(p => p.Z);
+			double minX = localPoints.Min(p => p.X);
+			double maxX = localPoints.Max(p => p.X);
+			double minY = localPoints.Min(p => p.Y);
+			double maxY = localPoints.Max(p => p.Y);
+			double minZ = localPoints.Min(p => p.Z);
+			double maxZ = localPoints.Max(p => p.Z);
 
-            var v0 = localPoints[0];
-            var v1 = localPoints[1];
-            var v2 = localPoints[2];
+			var v0 = localPoints[0];
+			var v1 = localPoints[1];
+			var v2 = localPoints[2];
 
-            var edge1 = new Point3D(v1.X - v0.X, v1.Y - v0.Y, v1.Z - v0.Z);
-            var edge2 = new Point3D(v2.X - v0.X, v2.Y - v0.Y, v2.Z - v0.Z);
+			var edge1 = new Point3D(v1.X - v0.X, v1.Y - v0.Y, v1.Z - v0.Z);
+			var edge2 = new Point3D(v2.X - v0.X, v2.Y - v0.Y, v2.Z - v0.Z);
 
-            var normal = Point3D.CrossProduct(edge1, edge2);
-            normal.Normalize();
+			var normal = Point3D.CrossProduct(edge1, edge2);
+			normal.Normalize();
 
-            double absX = Math.Abs(normal.X);
-            double absY = Math.Abs(normal.Y);
-            double absZ = Math.Abs(normal.Z);
+			double absX = Math.Abs(normal.X);
+			double absY = Math.Abs(normal.Y);
+			double absZ = Math.Abs(normal.Z);
 
-            foreach (var point in localPoints)
-            {
-                float u, v;
+			foreach (var point in localPoints)
+			{
+				float u, v;
 
-                if (absX >= absY && absX >= absZ)
-                {
-                    u = (float)((point.Z - minZ) / (maxZ - minZ));
-                    v = (float)((point.Y - minY) / (maxY - minY));
-                }
-                else if (absY >= absZ)
-                {
-                    u = (float)((point.X - minX) / (maxX - minX));
-                    v = (float)((point.Z - minZ) / (maxZ - minZ));
-                }
-                else
-                {
-                    u = (float)((point.X - minX) / (maxX - minX));
-                    v = (float)((point.Y - minY) / (maxY - minY));
-                }
+				if (absX >= absY && absX >= absZ)
+				{
+					u = (float)((point.Z - minZ) / (maxZ - minZ));
+					v = (float)((point.Y - minY) / (maxY - minY));
+				}
+				else if (absY >= absZ)
+				{
+					u = (float)((point.X - minX) / (maxX - minX));
+					v = (float)((point.Z - minZ) / (maxZ - minZ));
+				}
+				else
+				{
+					u = (float)((point.X - minX) / (maxX - minX));
+					v = (float)((point.Y - minY) / (maxY - minY));
+				}
 
-                texCoords.Add(new PointF(u, v));
-            }
+				texCoords.Add(new PointF(u, v));
+			}
 
-            return texCoords;
-        }
+			return texCoords;
+		}
 
-        private void SetupFaceTextureMapping(TextureBrush brush, List<PointF> texCoords, PointF[] screenPoints)
-        {
-            try
-            {
-                if (texCoords.Count < 3 || screenPoints.Length < 3) return;
+		private void SetupFaceTextureMapping(TextureBrush brush, List<PointF> texCoords, PointF[] screenPoints)
+		{
+			try
+			{
+				if (texCoords.Count < 3 || screenPoints.Length < 3) return;
 
-                PointF[] sourcePoints = new PointF[3];
-                PointF[] destPoints = new PointF[3];
+				PointF[] sourcePoints = new PointF[3];
+				PointF[] destPoints = new PointF[3];
 
-                for (int i = 0; i < 3; i++)
-                {
-                    sourcePoints[i] = new PointF(
-                        texCoords[i].X * currentTexture.Width,
-                        texCoords[i].Y * currentTexture.Height
-                    );
-                    destPoints[i] = screenPoints[i];
-                }
+				for (int i = 0; i < 3; i++)
+				{
+					sourcePoints[i] = new PointF(
+						texCoords[i].X * currentTexture.Width,
+						texCoords[i].Y * currentTexture.Height
+					);
+					destPoints[i] = screenPoints[i];
+				}
 
-                PointF p0 = sourcePoints[0];
-                PointF p1 = sourcePoints[1];
-                PointF p2 = sourcePoints[2];
+				PointF p0 = sourcePoints[0];
+				PointF p1 = sourcePoints[1];
+				PointF p2 = sourcePoints[2];
 
-                PointF q0 = destPoints[0];
-                PointF q1 = destPoints[1];
-                PointF q2 = destPoints[2];
+				PointF q0 = destPoints[0];
+				PointF q1 = destPoints[1];
+				PointF q2 = destPoints[2];
 
-                float det = (p1.X - p0.X) * (p2.Y - p0.Y) - (p1.Y - p0.Y) * (p2.X - p0.X);
-                if (Math.Abs(det) < 1e-10f)
-                {
-                    brush.ResetTransform();
-                    return;
-                }
+				float det = (p1.X - p0.X) * (p2.Y - p0.Y) - (p1.Y - p0.Y) * (p2.X - p0.X);
+				if (Math.Abs(det) < 1e-10f)
+				{
+					brush.ResetTransform();
+					return;
+				}
 
-                float a11 = ((q1.X - q0.X) * (p2.Y - p0.Y) - (q2.X - q0.X) * (p1.Y - p0.Y)) / det;
-                float a12 = ((q2.X - q0.X) * (p1.X - p0.X) - (q1.X - q0.X) * (p2.X - p0.X)) / det;
-                float a21 = ((q1.Y - q0.Y) * (p2.Y - p0.Y) - (q2.Y - q0.Y) * (p1.Y - p0.Y)) / det;
-                float a22 = ((q2.Y - q0.Y) * (p1.X - p0.X) - (q1.Y - q0.Y) * (p2.X - p0.X)) / det;
-                float dx = q0.X - a11 * p0.X - a12 * p0.Y;
-                float dy = q0.Y - a21 * p0.X - a22 * p0.Y;
+				float a11 = ((q1.X - q0.X) * (p2.Y - p0.Y) - (q2.X - q0.X) * (p1.Y - p0.Y)) / det;
+				float a12 = ((q2.X - q0.X) * (p1.X - p0.X) - (q1.X - q0.X) * (p2.X - p0.X)) / det;
+				float a21 = ((q1.Y - q0.Y) * (p2.Y - p0.Y) - (q2.Y - q0.Y) * (p1.Y - p0.Y)) / det;
+				float a22 = ((q2.Y - q0.Y) * (p1.X - p0.X) - (q1.Y - q0.Y) * (p2.X - p0.X)) / det;
+				float dx = q0.X - a11 * p0.X - a12 * p0.Y;
+				float dy = q0.Y - a21 * p0.X - a22 * p0.Y;
 
-                using (Matrix transform = new Matrix(a11, a21, a12, a22, dx, dy))
-                {
-                    brush.Transform = transform;
-                }
-            }
-            catch
-            {
-                brush.ResetTransform();
-            }
-        }
+				using (Matrix transform = new Matrix(a11, a21, a12, a22, dx, dy))
+				{
+					brush.Transform = transform;
+				}
+			}
+			catch
+			{
+				brush.ResetTransform();
+			}
+		}
 
-        private void comboBoxShading_SelectedIndexChanged(object sender, EventArgs e)
+		private void comboBoxShading_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			var mode = comboBoxShading.SelectedIndex;
 			currShadingState = (shadingState)mode;
@@ -1135,6 +1135,6 @@ namespace lab6
 			usingSecondPolyhedron = !usingSecondPolyhedron;
 			pictureBox1.Invalidate();
 		}
-        
-    }
+
+	}
 }
