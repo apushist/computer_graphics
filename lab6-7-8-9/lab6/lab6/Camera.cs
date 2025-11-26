@@ -85,11 +85,7 @@ namespace lab6
 			Matrix4x4 projection = GetProjectionMatrix();
 			transformed.Transform(projection);
 
-			float depth = (float)Math.Sqrt(
-				(worldPoint.X - Position.X) * (worldPoint.X - Position.X) +
-				(worldPoint.Y - Position.Y) * (worldPoint.Y - Position.Y) +
-				(worldPoint.Z - Position.Z) * (worldPoint.Z - Position.Z)
-			);
+			float depth = (float)worldPoint.Z;
 
 			if (transformed.W != 0)
 			{
