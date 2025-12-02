@@ -5,6 +5,8 @@
 #include "Shaders.h"
 #include "Graphics.h"
 
+int currentMode = 0;
+
 int main()
 {
     sf::Window window(sf::VideoMode({ 1000, 1000 }), "Lab12");
@@ -16,6 +18,7 @@ int main()
 
     InitShader();
     InitTetrahedron();
+    InitTextures();
 
     float moveSpeed = 0.05f;
 
@@ -38,20 +41,71 @@ int main()
                     MoveFigure(0.0f, moveSpeed, 0.0f);
                 else if (key == sf::Keyboard::Scan::Down)
                     MoveFigure(0.0f, -moveSpeed, 0.0f);
-                else if (key == sf::Keyboard::Scan::W) 
+                else if (key == sf::Keyboard::Scan::W)
                     MoveFigure(0.0f, 0.0f, moveSpeed);
-                else if (key == sf::Keyboard::Scan::S) 
+                else if (key == sf::Keyboard::Scan::S)
                     MoveFigure(0.0f, 0.0f, -moveSpeed);
 
                 else if (key == sf::Keyboard::Scan::Num1)
+                {
                     InitTetrahedron();
+                    currentMode = 0;
+                }
                 else if (key == sf::Keyboard::Scan::Num2)
+                {
                     InitCube();
+                    currentMode = 1;
+                }
+                else if (key == sf::Keyboard::Scan::Num3)
+                {
+                    InitCube();
+                    currentMode = 2;
+                }
+
+                else if (key == sf::Keyboard::Scan::Z)
+                {
+                    if (currentMode == 1)
+                    {
+                        colorMix += 0.05f;
+                        if (colorMix > 1.0f) colorMix = 1.0f;
+                    }
+                    else if (currentMode == 2)
+                    {
+                        textureMix += 0.05f;
+                        if (textureMix > 1.0f) textureMix = 1.0f;
+                    }
+                }
+                else if (key == sf::Keyboard::Scan::X)
+                {
+                    if (currentMode == 1)
+                    {
+                        colorMix -= 0.05f;
+                        if (colorMix > 1.0f) colorMix = 1.0f;
+                    }
+                    else if (currentMode == 2)
+                    {
+                        textureMix -= 0.05f;
+                        if (textureMix > 1.0f) textureMix = 1.0f;
+                    }
+                }
             }
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        DrawGradient3D(currentIndexCount);
+
+        if (currentMode == 0)
+        {
+            DrawGradient3D(currentIndexCount);
+        }
+        else if (currentMode == 1)
+        {
+            DrawTextureCube1();
+        }
+        else if (currentMode == 2)
+        {
+            DrawTextureCube2();
+        }
+
         window.display();
     }
 

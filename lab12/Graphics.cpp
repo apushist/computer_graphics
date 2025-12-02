@@ -1,16 +1,29 @@
 ﻿#include "Graphics.h"
 #include "Shaders.h"
 
+#include <SFML/Graphics.hpp>
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 
 GLuint VBO;
 GLuint VBO_Colors;
+GLuint VBO_TexCoords = 0;
 GLuint IBO; 
+
 int currentIndexCount = 0;
 float figurePos[3] = { 0.0f, 0.0f, 0.0f };
+
+GLuint Texture1 = 0;
+GLuint Texture2 = 0;
+
+float colorMix = 1.0f;
+float textureMix = 0.5f;
+
+float cubeAngleX = 0.5f;
+float cubeAngleY = 0.8f;
 
 struct Vertex3D {
     float x, y, z;
@@ -19,6 +32,41 @@ struct Vertex3D {
 struct Color {
     float r, g, b;
 };
+
+// Загрузчик текстур
+GLuint LoadTexture(const char* filename)
+{
+    sf::Image img;
+    if (!img.loadFromFile(filename))
+    {
+        cout << "Failed to load texture: " << filename << endl;
+        return 0;
+    }
+
+    img.flipVertically();
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        img.getSize().x,
+        img.getSize().y,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        img.getPixelsPtr()
+    );
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return texID;
+}
+
 
 void InitTetrahedron()
 {
@@ -66,44 +114,43 @@ void InitTetrahedron()
 
 void InitCube()
 {
-    Vertex3D vertices[8] =
+    Vertex3D vertices[24] =
     {
-        {-0.5f, -0.5f,  0.5f}, // 0 - передний нижний левый
-        { 0.5f, -0.5f,  0.5f}, // 1 - передний нижний правый
-        { 0.5f,  0.5f,  0.5f}, // 2 - передний верхний правый
-        {-0.5f,  0.5f,  0.5f}, // 3 - передний верхний левый
-        {-0.5f, -0.5f, -0.5f}, // 4 - задний нижний левый
-        { 0.5f, -0.5f, -0.5f}, // 5 - задний нижний правый
-        { 0.5f,  0.5f, -0.5f}, // 6 - задний верхний правый
-        {-0.5f,  0.5f, -0.5f}  // 7 - задний верхний левый
+        {-0.5f, -0.5f,  0.5f}, {0.5f, -0.5f,  0.5f}, {0.5f,  0.5f,  0.5f}, {-0.5f,  0.5f,  0.5f},
+        {-0.5f, -0.5f, -0.5f}, {-0.5f,  0.5f, -0.5f}, {0.5f,  0.5f, -0.5f}, {0.5f, -0.5f, -0.5f},
+        {-0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f,  0.5f}, {-0.5f,  0.5f,  0.5f}, {-0.5f,  0.5f, -0.5f},
+        {0.5f, -0.5f, -0.5f}, {0.5f,  0.5f, -0.5f}, {0.5f,  0.5f,  0.5f}, {0.5f, -0.5f,  0.5f},
+        {-0.5f,  0.5f, -0.5f}, {-0.5f,  0.5f,  0.5f}, {0.5f,  0.5f,  0.5f}, {0.5f,  0.5f, -0.5f},
+        {-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, -0.5f}, {0.5f, -0.5f,  0.5f}, {-0.5f, -0.5f,  0.5f}
+    };
+
+    Color colors[24];
+    for (int i = 0; i < 24; i++)
+    {
+        float r = (vertices[i].x + 0.5f);
+        float g = (vertices[i].y + 0.5f);
+        float b = (vertices[i].z + 0.5f);
+        colors[i] = { r, g, b };
+    }
+
+    float texCoords[24][2] =
+    {
+        {0,0},{1,0},{1,1},{0,1},
+        {0,0},{1,0},{1,1},{0,1},
+        {0,0},{1,0},{1,1},{0,1},
+        {0,0},{1,0},{1,1},{0,1},
+        {0,0},{1,0},{1,1},{0,1},
+        {0,0},{1,0},{1,1},{0,1}
     };
 
     GLuint indices[36] =
     {
-        // Передняя грань
-        0, 1, 2,  0, 2, 3,
-        // Задняя грань  
-        4, 6, 5,  4, 7, 6,
-        // Верхняя грань
-        3, 2, 6,  3, 6, 7,
-        // Нижняя грань
-        0, 5, 1,  0, 4, 5,
-        // Левая грань
-        0, 3, 7,  0, 7, 4,
-        // Правая грань
-        1, 5, 6,  1, 6, 2
-    };
-
-    Color colors[8] =
-    {
-        {1.0f, 0.0f, 0.0f},
-        {0.0f, 1.0f, 0.0f}, 
-        {0.0f, 0.0f, 1.0f}, 
-        {1.0f, 1.0f, 0.0f},
-        {1.0f, 0.0f, 1.0f}, 
-        {0.0f, 1.0f, 1.0f}, 
-        {0.5f, 0.5f, 1.0f}, 
-        {1.0f, 0.5f, 0.0f}  
+        0,1,2, 0,2,3,       
+        4,5,6, 4,6,7,       
+        8,9,10, 8,10,11,    
+        12,13,14, 12,14,15, 
+        16,17,18, 16,18,19, 
+        20,21,22, 20,22,23 
     };
 
     glGenBuffers(1, &VBO);
@@ -114,14 +161,17 @@ void InitCube()
     glBindBuffer(GL_ARRAY_BUFFER, VBO_Colors);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
 
+    glGenBuffers(1, &VBO_TexCoords);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_TexCoords);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     currentIndexCount = 36;
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
+
 
 void MoveFigure(float dx, float dy, float dz)
 {
@@ -154,4 +204,89 @@ void DrawGradient3D(int vertexCount)
     glDisableVertexAttribArray(Attrib_coord);
     glDisableVertexAttribArray(Attrib_color);
     glUseProgram(0);
+}
+
+// Отрисовка куба: текстура + цвет
+void DrawTextureCube1()
+{
+    glUseProgram(ProgramTexture1);
+
+    GLuint angleXLoc = glGetUniformLocation(ProgramTexture1, "angleX");
+    GLuint angleYLoc = glGetUniformLocation(ProgramTexture1, "angleY");
+    glUniform1f(angleXLoc, cubeAngleX);
+    glUniform1f(angleYLoc, cubeAngleY);
+
+    glUniform3f(Uniform_offset, figurePos[0], figurePos[1], figurePos[2]);
+
+    float scale = 1.0f / (1.0f + figurePos[2] * 0.5f);
+    glUniform1f(Uniform_scale, scale);
+
+    glUniform1f(Uniform_colorMix, colorMix);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glEnableVertexAttribArray(Attrib_coord);
+    glVertexAttribPointer(Attrib_coord, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_Colors);
+    glEnableVertexAttribArray(Attrib_color);
+    glVertexAttribPointer(Attrib_color, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_TexCoords);
+    glEnableVertexAttribArray(Attrib_texCoord);
+    glVertexAttribPointer(Attrib_texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, Texture1);
+    glUniform1i(glGetUniformLocation(ProgramTexture1, "texture1"), 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glDrawElements(GL_TRIANGLES, currentIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+// Отрисовка куба: 2 текстуры
+void DrawTextureCube2()
+{
+    glUseProgram(ProgramTexture2);
+
+    GLuint angleXLoc = glGetUniformLocation(ProgramTexture1, "angleX");
+    GLuint angleYLoc = glGetUniformLocation(ProgramTexture1, "angleY");
+    glUniform1f(angleXLoc, cubeAngleX);
+    glUniform1f(angleYLoc, cubeAngleY);
+
+    glUniform3f(Uniform_offset, figurePos[0], figurePos[1], figurePos[2]);
+
+    float scale = 1.0f / (1.0f + figurePos[2] * 0.5f);
+    glUniform1f(Uniform_scale, scale);
+
+    glUniform1f(Uniform_textureMix, textureMix);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glEnableVertexAttribArray(Attrib_coord);
+    glVertexAttribPointer(Attrib_coord, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_Colors);
+    glEnableVertexAttribArray(Attrib_color);
+    glVertexAttribPointer(Attrib_color, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_TexCoords);
+    glEnableVertexAttribArray(Attrib_texCoord);
+    glVertexAttribPointer(Attrib_texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, Texture1);
+    glUniform1i(glGetUniformLocation(ProgramTexture2, "texture1"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, Texture2);
+    glUniform1i(glGetUniformLocation(ProgramTexture2, "texture2"), 1);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glDrawElements(GL_TRIANGLES, currentIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+// Инициализация текстур
+void InitTextures()
+{
+    Texture1 = LoadTexture("texture1.png");
+    Texture2 = LoadTexture("texture2.png");
 }
