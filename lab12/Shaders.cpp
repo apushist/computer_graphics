@@ -7,6 +7,7 @@ using namespace std;
 GLuint Program;
 GLuint ProgramTexture1;
 GLuint ProgramTexture2;
+GLuint ProgramCircle;
 
 GLint Attrib_coord;
 GLint Attrib_color;
@@ -16,6 +17,7 @@ GLint Uniform_offset;
 GLint Uniform_scale;
 GLint Uniform_colorMix;
 GLint Uniform_textureMix;
+GLint Uniform_circleScale;
 
 const char* VertexShaderSourceGradient = R"(
 #version 330 core
@@ -132,6 +134,51 @@ void main()
 }
 )";
 
+const char* VertexShaderSourceCircle = R"(
+#version 330 core
+in vec3 coord;
+in vec3 color;
+out vec3 fragColor;
+uniform vec3 offset;
+uniform vec3 circleScale;  // Масштаб по осям
+
+void main() {
+    vec3 pos = coord * circleScale + offset;
+    gl_Position = vec4(pos, 1.0);
+    fragColor = color;
+}
+)";
+
+const char* FragShaderSourceCircle = R"(
+#version 330 core
+in vec3 fragColor;
+out vec4 outColor;
+
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+void main() {
+    float dist = length(fragColor.xy);
+    if (dist > 1.0) {
+        discard;
+    }
+    
+    // Центр - белый (1,1,1), по краям - полный Hue круг
+    float hue = atan(fragColor.y, fragColor.x) / (2.0 * 3.14159265);
+    if (hue < 0.0) hue += 1.0;
+    
+    // Интерполяция от белого в центре к цвету на краю
+    vec3 centerColor = vec3(1.0, 1.0, 1.0);
+    vec3 edgeColor = hsv2rgb(vec3(hue, 1.0, 1.0));
+    vec3 finalColor = mix(centerColor, edgeColor, dist);
+    
+    outColor = vec4(finalColor, 1.0);
+}
+)";
+
 
 static void CheckShader(GLuint shader)
 {
@@ -196,6 +243,21 @@ void InitShader()
     glAttachShader(ProgramTexture2, fs2);
     glLinkProgram(ProgramTexture2);
 
+    //круг
+    GLuint vs_circle = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs_circle, 1, &VertexShaderSourceCircle, NULL);
+    glCompileShader(vs_circle);
+    CheckShader(vs_circle);
+
+    GLuint fs_circle = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs_circle, 1, &FragShaderSourceCircle, NULL);
+    glCompileShader(fs_circle);
+    CheckShader(fs_circle);
+
+    ProgramCircle = glCreateProgram();
+    glAttachShader(ProgramCircle, vs_circle);
+    glAttachShader(ProgramCircle, fs_circle);
+    glLinkProgram(ProgramCircle);
 
     Attrib_coord = 0;
     Attrib_color = 1;
@@ -206,4 +268,5 @@ void InitShader()
     Uniform_colorMix = glGetUniformLocation(ProgramTexture1, "colorMix");
 
     Uniform_textureMix = glGetUniformLocation(ProgramTexture2, "textureMix");
+    Uniform_circleScale = glGetUniformLocation(ProgramCircle, "circleScale");
 }
