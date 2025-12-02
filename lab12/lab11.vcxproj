@@ -136,6 +136,12 @@
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Shaders.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="texture1.png" />
+    <Image Include="texture2.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </Image>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
