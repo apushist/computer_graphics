@@ -48,5 +48,20 @@ namespace lab6
         {
             Bitmap?.Dispose();
         }
+
+        public Color GetColor(float u, float v)
+        {
+            if (Bitmap == null) return Color.Magenta;
+
+            u = u - (float)Math.Floor(u);
+            v = v - (float)Math.Floor(v);
+            int x = (int)(u * Width) % Width;
+            int y = (int)((1 - v) * Height) % Height; 
+
+            x = Math.Clamp(x, 0, Width - 1);
+            y = Math.Clamp(y, 0, Height - 1);
+
+            return Bitmap.GetPixel(x, y);
+        }
     }
 }
