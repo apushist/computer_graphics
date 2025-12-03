@@ -11,7 +11,7 @@ int main()
 {
     sf::Window window(sf::VideoMode({ 1000, 1000 }), "Lab12");
     glewInit();
-    
+
     glEnable(GL_DEPTH_TEST);;
     glDepthFunc(GL_LESS);
     glClearDepth(1.0f);
@@ -21,6 +21,7 @@ int main()
     InitTextures();
 
     float moveSpeed = 0.05f;
+    float scaleSpeed = 0.05f;
 
     while (window.isOpen())
     {
@@ -61,6 +62,11 @@ int main()
                     InitCube();
                     currentMode = 2;
                 }
+                else if (key == sf::Keyboard::Scan::Num4)
+                {
+                    InitCircle();
+                    currentMode = 3;
+                }
 
                 else if (key == sf::Keyboard::Scan::Z)
                 {
@@ -74,18 +80,42 @@ int main()
                         textureMix += 0.05f;
                         if (textureMix > 1.0f) textureMix = 1.0f;
                     }
+                    else if (currentMode == 3)
+                    {
+                        circleScale[0] += scaleSpeed;
+                    }
                 }
                 else if (key == sf::Keyboard::Scan::X)
                 {
                     if (currentMode == 1)
                     {
                         colorMix -= 0.05f;
-                        if (colorMix > 1.0f) colorMix = 1.0f;
+                        if (colorMix < 0.0f) colorMix = 0.0f;
                     }
                     else if (currentMode == 2)
                     {
                         textureMix -= 0.05f;
-                        if (textureMix > 1.0f) textureMix = 1.0f;
+                        if (textureMix < 0.0f) textureMix = 0.0f;
+                    }
+                    else if (currentMode == 3)
+                    {
+                        circleScale[0] -= scaleSpeed;
+                        if (circleScale[0] < 0.1f) circleScale[0] = 0.1f;
+                    }
+                }
+                else if (key == sf::Keyboard::Scan::C)
+                {
+                    if (currentMode == 3)
+                    {
+                        circleScale[1] += scaleSpeed;
+                    }
+                }
+                else if (key == sf::Keyboard::Scan::V)
+                {
+                    if (currentMode == 3)
+                    {
+                        circleScale[1] -= scaleSpeed;
+                        if (circleScale[1] < 0.1f) circleScale[1] = 0.1f;
                     }
                 }
             }
@@ -93,22 +123,24 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (currentMode == 0)
+        switch (currentMode)
         {
+        case 0:
             DrawGradient3D(currentIndexCount);
-        }
-        else if (currentMode == 1)
-        {
+            break;
+        case 1:
             DrawTextureCube1();
-        }
-        else if (currentMode == 2)
-        {
+            break;
+        case 2:
             DrawTextureCube2();
+            break;
+        case 3:
+            DrawCircle();
+            break;
         }
 
         window.display();
     }
-
 
     return 0;
 }

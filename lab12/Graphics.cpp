@@ -25,6 +25,8 @@ float textureMix = 0.5f;
 float cubeAngleX = 0.5f;
 float cubeAngleY = 0.8f;
 
+float circleScale[3] = { 0.5f, 0.5f, 1.0f };
+
 struct Vertex3D {
     float x, y, z;
 };
@@ -172,6 +174,49 @@ void InitCube()
     currentIndexCount = 36;
 }
 
+void InitCircle()
+{
+    const int segments = 64;
+    const int verticesCount = segments + 1; 
+
+    vector<Vertex3D> vertices(verticesCount);
+    vector<Color> colors(verticesCount);
+
+    vertices[0] = { 0.0f, 0.0f, 0.0f };
+    colors[0] = { 0.0f, 0.0f, 0.0f }; 
+
+    for (int i = 1; i < verticesCount; i++) {
+        float angle = 2.0f * 3.14159265f * (i - 1) / (verticesCount - 1);
+        vertices[i] = { cos(angle), sin(angle), 0.0f };
+
+        colors[i] = { vertices[i].x, vertices[i].y, 0.0f };
+    }
+
+    vector<GLuint> indices;
+    for (int i = 1; i < verticesCount; i++) {
+        indices.push_back(0);
+        indices.push_back(i);
+        indices.push_back((i % (verticesCount - 1)) + 1);
+    }
+
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex3D), vertices.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &VBO_Colors);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_Colors);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(Color), colors.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
+    currentIndexCount = indices.size();
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 
 void MoveFigure(float dx, float dy, float dz)
 {
@@ -284,9 +329,34 @@ void DrawTextureCube2()
     glDrawElements(GL_TRIANGLES, currentIndexCount, GL_UNSIGNED_INT, 0);
 }
 
-// Инициализация текстур
 void InitTextures()
 {
     Texture1 = LoadTexture("texture1.png");
     Texture2 = LoadTexture("texture2.png");
+}
+
+void DrawCircle()
+{
+    glUseProgram(ProgramCircle);
+
+    glUniform3f(glGetUniformLocation(ProgramCircle, "offset"),
+        figurePos[0], figurePos[1], figurePos[2]);
+
+    glUniform3f(Uniform_circleScale,
+        circleScale[0], circleScale[1], circleScale[2]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glEnableVertexAttribArray(Attrib_coord);
+    glVertexAttribPointer(Attrib_coord, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_Colors);
+    glEnableVertexAttribArray(Attrib_color);
+    glVertexAttribPointer(Attrib_color, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glDrawElements(GL_TRIANGLES, currentIndexCount, GL_UNSIGNED_INT, 0);
+
+    glDisableVertexAttribArray(Attrib_coord);
+    glDisableVertexAttribArray(Attrib_color);
+    glUseProgram(0);
 }

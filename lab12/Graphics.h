@@ -7,10 +7,12 @@ void InitTextures();
 
 void InitTetrahedron();
 void InitCube();
+void InitCircle();
 
 void DrawGradient3D(int vertexCount);
 void DrawTextureCube1();
 void DrawTextureCube2();
+void DrawCircle();
 
 void MoveFigure(float dx, float dy, float dz);
 
@@ -30,3 +32,5 @@ extern GLuint textureID2;
 
 extern float cubeAngleX;
 extern float cubeAngleY;
+
+extern float circleScale[3];
