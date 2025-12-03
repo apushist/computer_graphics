@@ -12,6 +12,7 @@ namespace lab6
 
         public ProjectionType CurrentProjection { get; set; }
         public double FieldOfView { get; set; } = 80.0;
+        public float Distance { get; set; } = 10.0f;
 
         public double RotateX { get; set; } = 30.0;
         public double RotateY { get; set; } = 45.0;
@@ -21,6 +22,7 @@ namespace lab6
         public Camera()
         {
             CurrentProjection = ProjectionType.Axonometric;
+            Distance = Position.Z;
         }
 
         public Matrix4x4 GetProjectionMatrix()
@@ -34,21 +36,21 @@ namespace lab6
         }
 
         private Matrix4x4 CreatePerspectiveProjection()
-        {            
-			Matrix4x4 matrix = Matrix4x4.CreatePerspectMatrix();
-			Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
-			Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
+        {
+            Matrix4x4 matrix = Matrix4x4.CreatePerspectMatrix();
+            Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
+            Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
 
-			return rotationY * rotationX * matrix;
+            return rotationY * rotationX * matrix;
         }
 
         private Matrix4x4 CreateAxonometricProjection()
         {
-			Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
-			Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
+            Matrix4x4 rotationX = Matrix4x4.CreateRotationX(RotateX * Math.PI / 180.0);
+            Matrix4x4 rotationY = Matrix4x4.CreateRotationY(RotateY * Math.PI / 180.0);
             Matrix4x4 matrix = Matrix4x4.CreateAxonMatrix();
 
-			return rotationY * rotationX * matrix;
+            return rotationY * rotationX * matrix;
         }
 
         public PointF ProjectTo2D(Point3D point3D, int screenWidth, int screenHeight)
@@ -78,27 +80,31 @@ namespace lab6
             RotateX += deltaY * 0.5;
         }
 
-		public (PointF screenPos, float depth) ProjectTo2DWithDepth(Point3D worldPoint, int screenWidth, int screenHeight, float viewportScale = 1.0f)
-		{
-			Point3D transformed = new Point3D(worldPoint.X, worldPoint.Y, worldPoint.Z);
+        public (PointF screenPos, float depth) ProjectTo2DWithDepth(Point3D worldPoint, int screenWidth, int screenHeight, float viewportScale = 1.0f)
+        {
+            Point3D transformed = new Point3D(worldPoint.X, worldPoint.Y, worldPoint.Z);
 
-			Matrix4x4 projection = GetProjectionMatrix();
-			transformed.Transform(projection);
+            Matrix4x4 projection = GetProjectionMatrix();
+            transformed.Transform(projection);
 
+            if (transformed.W != 0)
+            {
+                transformed.X /= transformed.W;
+                transformed.Y /= transformed.W;
+                transformed.Z /= transformed.W;
+            }
 
-			if (transformed.W != 0)
-			{
-				transformed.X /= transformed.W;
-				transformed.Y /= transformed.W;
-				transformed.Z /= transformed.W;
-			}
-			float depth = (float)transformed.Z;
+            float depth = (float)transformed.Z;
 
-			float scale = 80f * viewportScale;
-			float x = (float)(transformed.X * scale + screenWidth / 2);
-			float y = (float)(-transformed.Y * scale + screenHeight / 2);
+            if (CurrentProjection == ProjectionType.Perspective)
+            {
+            }
 
-			return (new PointF(x, y), depth);
-		}
-	}
+            float scale = 80f * viewportScale;
+            float x = (float)(transformed.X * scale + screenWidth / 2);
+            float y = (float)(-transformed.Y * scale + screenHeight / 2);
+
+            return (new PointF(x, y), depth);
+        }
+    }
 }
