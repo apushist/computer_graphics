@@ -6,6 +6,9 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
+#include <algorithm>
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,11 +17,20 @@
 #include "Camera.h"
 
 Camera camera;
-Model teapotModel;
+Model currentModel;
 GLuint shaderProgram;
 GLuint textureID = 0;
 float deltaTime = 0.0f;
 sf::Clock gameClock;
+
+float modelRotationX = 0.0f;
+float modelRotationY = 0.0f;
+bool rotateModelWithMouse = false;
+float lastMouseX = 0.0f;
+float lastMouseY = 0.0f;
+
+std::vector<std::string> modelFiles;
+std::string currentModelName = "teapot.obj";
 
 const char* vertexShaderSource = R"(
     #version 330 core
@@ -80,6 +92,7 @@ bool InitShader() {
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
+        std::cerr << "Vertex shader error: " << infoLog << std::endl;
         return false;
     }
 
@@ -90,6 +103,7 @@ bool InitShader() {
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
+        std::cerr << "Fragment shader error: " << infoLog << std::endl;
         return false;
     }
 
@@ -101,6 +115,7 @@ bool InitShader() {
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
+        std::cerr << "Shader program error: " << infoLog << std::endl;
         return false;
     }
 
@@ -138,38 +153,159 @@ GLuint CreateSimpleTexture() {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     return texID;
 }
 
+void ScanModelsFolder() {
+    modelFiles.clear();
+    try {
+        if (!std::filesystem::exists("models")) {
+            std::cout << "Warning: 'models/' folder not found. Creating it..." << std::endl;
+            std::filesystem::create_directory("models");
+            return;
+        }
+
+        int count = 0;
+        for (const auto& entry : std::filesystem::directory_iterator("models")) {
+            if (entry.path().extension() == ".obj") {
+                std::string filename = entry.path().filename().string();
+                modelFiles.push_back(filename);
+                count++;
+            }
+        }
+
+        std::sort(modelFiles.begin(), modelFiles.end());
+
+        if (count == 0) {
+            std::cout << "No OBJ files found in 'models/' folder." << std::endl;
+        }
+        else {
+            std::cout << "Found " << count << " OBJ file(s)." << std::endl;
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error scanning models folder: " << e.what() << std::endl;
+    }
+}
+
+bool LoadModel(const std::string& filename) {
+    std::string fullPath = "models/" + filename;
+    std::cout << "\nLoading model: " << filename << std::endl;
+
+    Model newModel;
+    if (!newModel.LoadFromOBJ(fullPath)) {
+        std::cout << "Failed to load: " << filename << std::endl;
+        return false;
+    }
+
+    currentModel = std::move(newModel);
+    currentModelName = filename;
+
+    std::cout << "Successfully loaded: " << filename << std::endl;
+    return true;
+}
+
+void ShowModelSelectionMenu() {
+    ScanModelsFolder();
+
+    if (modelFiles.empty()) {
+        std::cout << "\nNo models available in 'models/' folder." << std::endl;
+        std::cout << "Please add OBJ files to the 'models/' folder." << std::endl;
+        return;
+    }
+
+    std::cout << "\nSelect model to load:" << std::endl;
+    std::cout << "Available models in 'models/' folder:" << std::endl;
+
+    for (size_t i = 0; i < modelFiles.size(); i++) {
+        std::cout << "  " << i + 1 << ". " << modelFiles[i];
+        if (modelFiles[i] == currentModelName) {
+            std::cout << " [CURRENT]";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "\nEnter model number (1-" << modelFiles.size() << "), or 0 to cancel: ";
+
+    int choice;
+    if (!(std::cin >> choice)) {
+        std::cin.clear();
+        std::cin.ignore(10000, '\n');
+        std::cout << "Invalid input. Please enter a number." << std::endl;
+        return;
+    }
+
+    if (choice == 0) {
+        std::cout << "Selection cancelled." << std::endl;
+        return;
+    }
+
+    if (choice < 1 || choice > static_cast<int>(modelFiles.size())) {
+        std::cout << "Invalid choice. Please enter a number between 1 and "
+            << modelFiles.size() << "." << std::endl;
+        return;
+    }
+
+    std::string selectedModel = modelFiles[choice - 1];
+    if (LoadModel(selectedModel)) {
+        std::cout << "Model switched to: " << selectedModel << std::endl;
+    }
+}
+
 int main() {
-    sf::Window window(sf::VideoMode({ 1000, 800 }), "3D Teapot with Camera");
+    sf::Window window(sf::VideoMode({ 1000, 800 }), "3D Model Viewer");
     window.setVerticalSyncEnabled(true);
     window.setActive(true);
 
-    glewInit();
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(err) << std::endl;
+        return -1;
+    }
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-    InitShader();
-    teapotModel.LoadFromOBJ("models/teapot.obj");
+
+    if (!InitShader()) {
+        std::cerr << "Failed to initialize shader!" << std::endl;
+        return -1;
+    }
+
     textureID = CreateSimpleTexture();
 
-    std::cout << "CAMERA CONTROLERS" << std::endl;
-    std::cout << "Space - Move forward" << std::endl;
-    std::cout << "LShift - Move backward" << std::endl;
-    std::cout << "D - Move left" << std::endl;
-    std::cout << "A - Move right" << std::endl;
-    std::cout << "S - Move up" << std::endl;
-    std::cout << "W - Move down" << std::endl;
-    std::cout << "Mouse - Rotate camera (click and drag)" << std::endl;
-    std::cout << "Mouse Wheel - Zoom in/out" << std::endl;
-    std::cout << "R - Reset camera to initial position" << std::endl;
-    std::cout << "Escape - Exit program" << std::endl;
+    ScanModelsFolder();
+    bool modelLoaded = false;
+
+    if (std::find(modelFiles.begin(), modelFiles.end(), "teapot.obj") != modelFiles.end()) {
+        modelLoaded = LoadModel("teapot.obj");
+    }
+
+    if (!modelLoaded && !modelFiles.empty()) {
+        modelLoaded = LoadModel(modelFiles[0]);
+    }
+
+    if (!modelLoaded) {
+        std::cout << "No models found. Please add OBJ files to the 'models/' folder." << std::endl;
+        std::cout << "Press L to load a model after adding files." << std::endl;
+    }
+
+    std::cout << "CAMERA MOVEMENT:" << std::endl;
+    std::cout << "  Space - Move forward" << std::endl;
+    std::cout << "  LShift - Move backward" << std::endl;
+    std::cout << "  D - Move left" << std::endl;
+    std::cout << "  A - Move right" << std::endl;
+    std::cout << "  S - Move up" << std::endl;
+    std::cout << "  W - Move down" << std::endl;
+    std::cout << "  Mouse Wheel - Zoom in/out" << std::endl;
+    std::cout << "  L - Load new model from list" << std::endl;
+    std::cout << "  R - Reset camera and model rotation" << std::endl;
+    std::cout << "  Escape - Exit program" << std::endl;
+    std::cout << "\nCurrent model: " << currentModelName << std::endl;
+    std::cout << "\nPress L to select a different model!" << std::endl;
 
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
-
-    bool firstMouse = true;
-    float lastX = 500.0f, lastY = 400.0f;
 
     while (window.isOpen()) {
         deltaTime = gameClock.restart().asSeconds();
@@ -177,6 +313,56 @@ int main() {
         while (auto event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
+            }
+
+            if (event->is<sf::Event::MouseButtonPressed>()) {
+                const auto& buttonEvent = event->getIf<sf::Event::MouseButtonPressed>();
+                if (buttonEvent) {
+                    if (buttonEvent->button == sf::Mouse::Button::Left) {
+                        rotateModelWithMouse = true;
+                        lastMouseX = static_cast<float>(buttonEvent->position.x);
+                        lastMouseY = static_cast<float>(buttonEvent->position.y);
+                    }
+                }
+            }
+
+            if (event->is<sf::Event::MouseButtonReleased>()) {
+                const auto& buttonEvent = event->getIf<sf::Event::MouseButtonReleased>();
+                if (buttonEvent) {
+                    if (buttonEvent->button == sf::Mouse::Button::Left) {
+                        rotateModelWithMouse = false;
+                    }
+                }
+            }
+
+            if (event->is<sf::Event::MouseMoved>()) {
+                const auto& mouseEvent = event->getIf<sf::Event::MouseMoved>();
+                if (mouseEvent) {
+                    float xpos = static_cast<float>(mouseEvent->position.x);
+                    float ypos = static_cast<float>(mouseEvent->position.y);
+
+                    if (rotateModelWithMouse) {
+                        float xoffset = xpos - lastMouseX;
+                        float yoffset = lastMouseY - ypos;
+
+                        modelRotationY += xoffset * 0.5f;
+                        modelRotationX += yoffset * 0.5f;
+                        if (modelRotationX > 89.0f) modelRotationX = 89.0f;
+                        if (modelRotationX < -89.0f) modelRotationX = -89.0f;
+
+                        lastMouseX = xpos;
+                        lastMouseY = ypos;
+                    }
+                }
+            }
+
+            if (event->is<sf::Event::MouseWheelScrolled>()) {
+                const auto& wheelEvent = event->getIf<sf::Event::MouseWheelScrolled>();
+                if (wheelEvent && wheelEvent->wheel == sf::Mouse::Wheel::Vertical) {
+                    float zoom = wheelEvent->delta * 0.3f;
+                    if (zoom > 0) camera.MoveForward(0.5f);
+                    else camera.MoveBackward(0.5f);
+                }
             }
 
             if (event->is<sf::Event::KeyPressed>()) {
@@ -188,40 +374,13 @@ int main() {
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::R) {
                         camera = Camera();
                         camera.SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
-                        firstMouse = true;
-                        std::cout << "Camera reset" << std::endl;
+                        modelRotationX = 0.0f;
+                        modelRotationY = 0.0f;
+                        std::cout << "Camera and model rotation reset" << std::endl;
                     }
-                }
-            }
-
-            if (event->is<sf::Event::MouseMoved>()) {
-                const auto& mouseEvent = event->getIf<sf::Event::MouseMoved>();
-                if (mouseEvent) {
-                    float xpos = static_cast<float>(mouseEvent->position.x);
-                    float ypos = static_cast<float>(mouseEvent->position.y);
-
-                    if (firstMouse) {
-                        lastX = xpos;
-                        lastY = ypos;
-                        firstMouse = false;
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::L) {
+                        ShowModelSelectionMenu();
                     }
-
-                    float xoffset = xpos - lastX;
-                    float yoffset = lastY - ypos;
-
-                    lastX = xpos;
-                    lastY = ypos;
-
-                    camera.ProcessMouseMovement(xoffset, yoffset);
-                }
-            }
-
-            if (event->is<sf::Event::MouseWheelScrolled>()) {
-                const auto& wheelEvent = event->getIf<sf::Event::MouseWheelScrolled>();
-                if (wheelEvent && wheelEvent->wheel == sf::Mouse::Wheel::Vertical) {
-                    float zoom = wheelEvent->delta * 0.3f;
-                    if (zoom > 0) camera.MoveForward(0.5f);
-                    else camera.MoveBackward(0.5f);
                 }
             }
         }
@@ -250,11 +409,9 @@ int main() {
 
         glUseProgram(shaderProgram);
 
-        static float rotationAngle = 0.0f;
-        rotationAngle += deltaTime * 30.0f;
-
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(rotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(modelRotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(modelRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
 
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = camera.GetProjectionMatrix(1000.0f / 800.0f);
@@ -272,7 +429,10 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, textureID);
         glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
 
-        teapotModel.Draw();
+        if (currentModel.IsInitialized()) {
+            currentModel.Draw();
+        }
+
         window.display();
     }
 
