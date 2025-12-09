@@ -1,4 +1,5 @@
 #include "Model.h"
+#include <glm/glm.hpp> 
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -298,4 +299,88 @@ void Model::Draw() const {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+}
+
+glm::vec3 Model::GetMin() const {
+    if (vertices.empty()) return glm::vec3(0.0f);
+
+    float minX = vertices[0].x;
+    float minY = vertices[0].y;
+    float minZ = vertices[0].z;
+
+    for (const auto& v : vertices) {
+        if (v.x < minX) minX = v.x;
+        if (v.y < minY) minY = v.y;
+        if (v.z < minZ) minZ = v.z;
+    }
+    return glm::vec3(minX, minY, minZ);
+}
+
+glm::vec3 Model::GetMax() const {
+    if (vertices.empty()) return glm::vec3(0.0f);
+
+    float maxX = vertices[0].x;
+    float maxY = vertices[0].y;
+    float maxZ = vertices[0].z;
+
+    for (const auto& v : vertices) {
+        if (v.x > maxX) maxX = v.x;
+        if (v.y > maxY) maxY = v.y;
+        if (v.z > maxZ) maxZ = v.z;
+    }
+    return glm::vec3(maxX, maxY, maxZ);
+}
+
+glm::vec3 Model::GetSize() const {
+    glm::vec3 min = GetMin();
+    glm::vec3 max = GetMax();
+    return max - min;
+}
+
+
+void Model::InitPlanets()
+{
+    planets.clear();
+
+    if (!IsInitialized()) return;
+
+    glm::vec3 size = GetSize();
+    float maxDim = std::max(size.x, std::max(size.y, size.z));
+    if (maxDim == 0.0f) maxDim = 1.0f;
+
+    float desiredSize = 1.0f;
+    float modelScale = desiredSize / maxDim;
+
+    planets.push_back({
+        glm::vec3(0.0f),    // position
+        modelScale * 2.0f,  // scale
+        0.0f,               // rotation
+        0.0f,               // orbitRadius
+        0.0f,               // orbitSpeed
+        20.0f               // selfRotationSpeed
+        });
+
+    int numObjects = 4;
+    float baseOrbit = 3.0f;
+    float orbitStep = 2.5f;
+
+    for (int i = 0; i < numObjects; i++) {
+        float angle = i * 360.0f / numObjects;
+        float rad = glm::radians(angle);
+        float orbitRadius = baseOrbit + i * orbitStep;
+
+        glm::vec3 pos;
+        pos.x = orbitRadius * cos(rad);
+        pos.y = 0.0f;
+        pos.z = orbitRadius * sin(rad);
+
+        planets.push_back({
+            pos,              // position
+            modelScale,       // scale
+            0.0f,             // rotation
+            orbitRadius,      // orbitRadius
+            5.0f + i * 2.0f,  // orbitSpeed
+            30.0f             // selfRotationSpeed
+            });
+    }
 }

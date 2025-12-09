@@ -5,10 +5,11 @@
 #include <map>
 #include <tuple>
 #include <string>
+#include <glm/glm.hpp>
+
 #ifdef _WIN32
 #include <GL/glew.h>
 #else
-#include <OpenGL/gl3.h>
 #endif
 
 struct Vertex {
@@ -22,6 +23,17 @@ struct TexCoord {
 struct Normal {
     float x, y, z;
 };
+
+struct Planet {
+    glm::vec3 position;
+    float scale;
+    float rotation;
+    float orbitRadius;
+    float orbitSpeed;
+    float selfRotationSpeed;
+};
+
+extern std::vector<Planet> planets;
 
 class Model {
 private:
@@ -53,6 +65,12 @@ public:
     void Draw() const;
 
     bool IsInitialized() const { return isInitialized; }
+
+    glm::vec3 GetMin() const;
+    glm::vec3 GetMax() const;
+    glm::vec3 GetSize() const;
+
+    void InitPlanets();
 };
 
 #endif // MODEL_H
