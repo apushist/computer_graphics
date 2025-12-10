@@ -303,16 +303,16 @@ int main() {
             camera.MoveBackward(moveSpeed);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-            camera.MoveLeft(moveSpeed);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             camera.MoveRight(moveSpeed);
         }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            camera.MoveLeft(moveSpeed);
+        }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-            camera.MoveUp(moveSpeed);
+            camera.MoveDown(moveSpeed);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-            camera.MoveDown(moveSpeed);
+            camera.MoveUp(moveSpeed);
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

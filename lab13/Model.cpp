@@ -361,7 +361,7 @@ void Model::InitPlanets()
         20.0f               // selfRotationSpeed
         });
 
-    int numObjects = 4;
+    int numObjects = 5;
     float baseOrbit = 3.0f;
     float orbitStep = 2.5f;
 
