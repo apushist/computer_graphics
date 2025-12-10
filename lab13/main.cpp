@@ -1,6 +1,7 @@
 ﻿#include <GL/glew.h>
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
+#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -15,151 +16,32 @@
 
 #include "Model.h"
 #include "Camera.h"
+#include "Textures.h"
+#include "Shaders.h"
 
 Camera camera;
 Model currentModel;
 GLuint shaderProgram;
-GLuint textureID = 0;
 float deltaTime = 0.0f;
 sf::Clock gameClock;
 
 float modelRotationX = 0.0f;
 float modelRotationY = 0.0f;
-bool rotateModelWithMouse = false;
+bool rotatingCamera = false;
 float lastMouseX = 0.0f;
 float lastMouseY = 0.0f;
 
 std::vector<std::string> modelFiles;
 std::string currentModelName = "teapot.obj";
 
-const char* vertexShaderSource = R"(
-    #version 330 core
-    layout(location = 0) in vec3 aPos;
-    layout(location = 1) in vec2 aTexCoord;
-    layout(location = 2) in vec3 aNormal;
-    
-    out vec2 TexCoord;
-    out vec3 Normal;
-    out vec3 FragPos;
-    
-    uniform mat4 model;
-    uniform mat4 view;
-    uniform mat4 projection;
-    
-    void main() {
-        gl_Position = projection * view * model * vec4(aPos, 1.0);
-        FragPos = vec3(model * vec4(aPos, 1.0));
-        TexCoord = aTexCoord;
-        Normal = mat3(transpose(inverse(model))) * aNormal;
-    }
-)";
+GLuint currentTextureID = 0;
+std::string currentTextureName = "";
+std::vector<std::string> textureFiles;
 
-const char* fragmentShaderSource = R"(
-    #version 330 core
-    in vec2 TexCoord;
-    in vec3 Normal;
-    in vec3 FragPos;
-    
-    out vec4 FragColor;
-    
-    uniform sampler2D texture1;
-    uniform vec3 lightPos;
-    uniform vec3 viewPos;
-    
-    void main() {
-        vec3 lightColor = vec3(1.0, 1.0, 1.0);
-        float ambientStrength = 0.3;
-        vec3 ambient = ambientStrength * lightColor;
-        
-        vec3 norm = normalize(Normal);
-        vec3 lightDir = normalize(lightPos - FragPos);
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * lightColor;
-        
-        vec4 texColor = texture(texture1, TexCoord);
-        vec3 result = (ambient + diffuse) * texColor.rgb;
-        FragColor = vec4(result, texColor.a);
-    }
-)";
+std::vector<Planet> planets;
 
-bool InitShader() {
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
-
-    GLint success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cerr << "Vertex shader error: " << infoLog << std::endl;
-        return false;
-    }
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-        std::cerr << "Fragment shader error: " << infoLog << std::endl;
-        return false;
-    }
-
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-        std::cerr << "Shader program error: " << infoLog << std::endl;
-        return false;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return true;
-}
-
-GLuint CreateSimpleTexture() {
-    const int width = 256;
-    const int height = 256;
-    std::vector<unsigned char> imageData(width * height * 4);
-
-    unsigned char r = 200;
-    unsigned char g = 150;
-    unsigned char b = 100;
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int index = (y * width + x) * 4;
-            imageData[index] = r;
-            imageData[index + 1] = g;
-            imageData[index + 2] = b;
-            imageData[index + 3] = 255;
-        }
-    }
-
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, imageData.data());
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    return texID;
-}
-
-void ScanModelsFolder() {
+void ScanModelsFolder()
+{
     modelFiles.clear();
     try {
         if (!std::filesystem::exists("models")) {
@@ -191,7 +73,8 @@ void ScanModelsFolder() {
     }
 }
 
-bool LoadModel(const std::string& filename) {
+bool LoadModel(const std::string& filename)
+{
     std::string fullPath = "models/" + filename;
     std::cout << "\nLoading model: " << filename << std::endl;
 
@@ -205,6 +88,9 @@ bool LoadModel(const std::string& filename) {
     currentModelName = filename;
 
     std::cout << "Successfully loaded: " << filename << std::endl;
+
+    currentModel.InitPlanets();
+
     return true;
 }
 
@@ -268,23 +154,20 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 
-    if (!InitShader()) {
+    if (!InitShader(shaderProgram)) {
         std::cerr << "Failed to initialize shader!" << std::endl;
         return -1;
     }
 
-    textureID = CreateSimpleTexture();
+    currentTextureID = LoadTextureFromFile("textures/texture2.png");
+    if (!currentTextureID) currentTextureID = CreateSimpleTexture();
 
     ScanModelsFolder();
     bool modelLoaded = false;
 
-    if (std::find(modelFiles.begin(), modelFiles.end(), "teapot.obj") != modelFiles.end()) {
-        modelLoaded = LoadModel("teapot.obj");
-    }
-
-    if (!modelLoaded && !modelFiles.empty()) {
-        modelLoaded = LoadModel(modelFiles[0]);
-    }
+    if (std::find(modelFiles.begin(), modelFiles.end(), "teapot.obj") != modelFiles.end())
+        LoadModel("teapot.obj");
+    else if (!modelFiles.empty()) LoadModel(modelFiles[0]);
 
     if (!modelLoaded) {
         std::cout << "No models found. Please add OBJ files to the 'models/' folder." << std::endl;
@@ -300,12 +183,17 @@ int main() {
     std::cout << "  W - Move down" << std::endl;
     std::cout << "  Mouse Wheel - Zoom in/out" << std::endl;
     std::cout << "  L - Load new model from list" << std::endl;
+    std::cout << "  T - Load texture from list" << std::endl;
     std::cout << "  R - Reset camera and model rotation" << std::endl;
     std::cout << "  Escape - Exit program" << std::endl;
     std::cout << "\nCurrent model: " << currentModelName << std::endl;
     std::cout << "\nPress L to select a different model!" << std::endl;
 
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
+    camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    float mouseSensitivity = 0.3f;
+    float zoomSpeed = 2.0f;
 
     while (window.isOpen()) {
         deltaTime = gameClock.restart().asSeconds();
@@ -315,14 +203,23 @@ int main() {
                 window.close();
             }
 
+            if (event->is<sf::Event::Resized>()) {
+                const auto& sizeEvent = event->getIf<sf::Event::Resized>();
+                if (sizeEvent) {
+                    int width = sizeEvent->size.x;
+                    int height = sizeEvent->size.y;
+
+                    glViewport(0, 0, width, height);
+                    camera.SetAspectRatio(static_cast<float>(width) / height);
+                }
+            }
+
             if (event->is<sf::Event::MouseButtonPressed>()) {
-                const auto& buttonEvent = event->getIf<sf::Event::MouseButtonPressed>();
-                if (buttonEvent) {
-                    if (buttonEvent->button == sf::Mouse::Button::Left) {
-                        rotateModelWithMouse = true;
-                        lastMouseX = static_cast<float>(buttonEvent->position.x);
-                        lastMouseY = static_cast<float>(buttonEvent->position.y);
-                    }
+                const auto& btn = event->getIf<sf::Event::MouseButtonPressed>();
+                if (btn && btn->button == sf::Mouse::Button::Left) {
+                    rotatingCamera = true;
+                    lastMouseX = static_cast<float>(btn->position.x);
+                    lastMouseY = static_cast<float>(btn->position.y);
                 }
             }
 
@@ -330,38 +227,32 @@ int main() {
                 const auto& buttonEvent = event->getIf<sf::Event::MouseButtonReleased>();
                 if (buttonEvent) {
                     if (buttonEvent->button == sf::Mouse::Button::Left) {
-                        rotateModelWithMouse = false;
+                        rotatingCamera = false;
                     }
                 }
             }
 
             if (event->is<sf::Event::MouseMoved>()) {
-                const auto& mouseEvent = event->getIf<sf::Event::MouseMoved>();
-                if (mouseEvent) {
-                    float xpos = static_cast<float>(mouseEvent->position.x);
-                    float ypos = static_cast<float>(mouseEvent->position.y);
+                const auto& mouse = event->getIf<sf::Event::MouseMoved>();
+                if (mouse && rotatingCamera) {
+                    float xoffset = mouse->position.x - lastMouseX;
+                    float yoffset = lastMouseY - mouse->position.y;
+                    lastMouseX = static_cast<float>(mouse->position.x);
+                    lastMouseY = static_cast<float>(mouse->position.y);
 
-                    if (rotateModelWithMouse) {
-                        float xoffset = xpos - lastMouseX;
-                        float yoffset = lastMouseY - ypos;
-
-                        modelRotationY += xoffset * 0.5f;
-                        modelRotationX += yoffset * 0.5f;
-                        if (modelRotationX > 89.0f) modelRotationX = 89.0f;
-                        if (modelRotationX < -89.0f) modelRotationX = -89.0f;
-
-                        lastMouseX = xpos;
-                        lastMouseY = ypos;
-                    }
+                    camera.Rotate(xoffset * mouseSensitivity, yoffset * mouseSensitivity);
                 }
             }
 
             if (event->is<sf::Event::MouseWheelScrolled>()) {
-                const auto& wheelEvent = event->getIf<sf::Event::MouseWheelScrolled>();
-                if (wheelEvent && wheelEvent->wheel == sf::Mouse::Wheel::Vertical) {
-                    float zoom = wheelEvent->delta * 0.3f;
-                    if (zoom > 0) camera.MoveForward(0.5f);
-                    else camera.MoveBackward(0.5f);
+                const auto& wheel = event->getIf<sf::Event::MouseWheelScrolled>();
+                if (wheel && wheel->wheel == sf::Mouse::Wheel::Vertical) {
+                    if (wheel->delta > 0) {
+                        camera.MoveForward(zoomSpeed);
+                    }
+                    else {
+                        camera.MoveBackward(zoomSpeed);
+                    }
                 }
             }
 
@@ -373,7 +264,8 @@ int main() {
                     }
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::R) {
                         camera = Camera();
-                        camera.SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
+                        camera.SetPosition(glm::vec3(0.0f, 0.0f, 15.0f));
+                        camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
                         modelRotationX = 0.0f;
                         modelRotationY = 0.0f;
                         std::cout << "Camera and model rotation reset" << std::endl;
@@ -381,7 +273,25 @@ int main() {
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::L) {
                         ShowModelSelectionMenu();
                     }
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::T) {
+                        ShowTextureSelectionMenu();
+                    }
                 }
+            }
+        }
+
+        for (auto& planet : planets) {
+            planet.rotation += planet.selfRotationSpeed * deltaTime;
+            if (planet.orbitRadius > 0.0f) {
+                planet.orbitAngle += planet.orbitSpeed * deltaTime;
+
+                if (planet.orbitAngle > 360.0f) {
+                    planet.orbitAngle -= 360.0f;
+                }
+
+                float rad = glm::radians(planet.orbitAngle);
+                planet.position.x = planet.orbitRadius * cos(rad);
+                planet.position.z = planet.orbitRadius * sin(rad);
             }
         }
 
@@ -393,16 +303,16 @@ int main() {
             camera.MoveBackward(moveSpeed);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-            camera.MoveLeft(moveSpeed);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             camera.MoveRight(moveSpeed);
         }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            camera.MoveLeft(moveSpeed);
+        }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-            camera.MoveUp(moveSpeed);
+            camera.MoveDown(moveSpeed);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-            camera.MoveDown(moveSpeed);
+            camera.MoveUp(moveSpeed);
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -414,7 +324,7 @@ int main() {
         model = glm::rotate(model, glm::radians(modelRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
 
         glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = camera.GetProjectionMatrix(1000.0f / 800.0f);
+        glm::mat4 projection = camera.GetProjectionMatrix(camera.GetAspectRatio());
 
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -426,11 +336,19 @@ int main() {
         glUniform3f(glGetUniformLocation(shaderProgram, "viewPos"), viewPos.x, viewPos.y, viewPos.z);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, currentTextureID);
         glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
 
         if (currentModel.IsInitialized()) {
-            currentModel.Draw();
+            for (const auto& planet : planets) {
+                glm::mat4 modelMat = glm::mat4(1.0f);
+                modelMat = glm::translate(modelMat, planet.position);
+                modelMat = glm::rotate(modelMat, glm::radians(planet.rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+                modelMat = glm::scale(modelMat, glm::vec3(planet.scale));
+
+                glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelMat));
+                currentModel.Draw();
+            }
         }
 
         window.display();

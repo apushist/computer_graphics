@@ -73,3 +73,19 @@ void Camera::updateCameraVectors() {
     right = glm::normalize(glm::cross(front, worldUp));
     up = glm::normalize(glm::cross(right, front));
 }
+
+void Camera::LookAt(const glm::vec3& target) {
+    front = glm::normalize(target - position);
+    right = glm::normalize(glm::cross(front, worldUp));
+    up = glm::normalize(glm::cross(right, front));
+}
+
+void Camera::Rotate(float yawOffset, float pitchOffset) {
+    yaw += yawOffset;
+    pitch += pitchOffset;
+
+    if (pitch > 89.0f) pitch = 89.0f;
+    if (pitch < -89.0f) pitch = -89.0f;
+
+    updateCameraVectors();
+}

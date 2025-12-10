@@ -131,10 +131,14 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Shaders.cpp" />
+    <ClCompile Include="Textures.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Shaders.h" />
+    <ClInclude Include="Textures.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="texture1.png" />
