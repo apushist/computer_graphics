@@ -25,9 +25,6 @@ GLuint shaderProgram;
 float deltaTime = 0.0f;
 sf::Clock gameClock;
 
-float cameraDistance = 15.0f;
-float cameraYaw = -90.0f;
-float cameraPitch = 20.0f;
 float modelRotationX = 0.0f;
 float modelRotationY = 0.0f;
 bool rotatingCamera = false;
@@ -144,8 +141,6 @@ void ShowModelSelectionMenu() {
     }
 }
 
-
-
 int main() {
     sf::Window window(sf::VideoMode({ 1000, 800 }), "3D Model Viewer");
     window.setVerticalSyncEnabled(true);
@@ -195,7 +190,10 @@ int main() {
     std::cout << "\nPress L to select a different model!" << std::endl;
 
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
+    camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 
+    float mouseSensitivity = 0.3f;
+    float zoomSpeed = 2.0f;
 
     while (window.isOpen()) {
         deltaTime = gameClock.restart().asSeconds();
@@ -242,21 +240,19 @@ int main() {
                     lastMouseX = static_cast<float>(mouse->position.x);
                     lastMouseY = static_cast<float>(mouse->position.y);
 
-                    float sensitivity = 0.3f;
-                    cameraYaw += xoffset * sensitivity;
-                    cameraPitch += yoffset * sensitivity;
-
-                    if (cameraPitch > 89.0f) cameraPitch = 89.0f;
-                    if (cameraPitch < -89.0f) cameraPitch = -89.0f;
+                    camera.Rotate(xoffset * mouseSensitivity, yoffset * mouseSensitivity);
                 }
             }
 
             if (event->is<sf::Event::MouseWheelScrolled>()) {
                 const auto& wheel = event->getIf<sf::Event::MouseWheelScrolled>();
                 if (wheel && wheel->wheel == sf::Mouse::Wheel::Vertical) {
-                    cameraDistance -= wheel->delta;
-                    if (cameraDistance < 2.0f) cameraDistance = 2.0f;
-                    if (cameraDistance > 50.0f) cameraDistance = 50.0f;
+                    if (wheel->delta > 0) {
+                        camera.MoveForward(zoomSpeed);
+                    }
+                    else {
+                        camera.MoveBackward(zoomSpeed);
+                    }
                 }
             }
 
@@ -268,7 +264,8 @@ int main() {
                     }
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::R) {
                         camera = Camera();
-                        camera.SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
+                        camera.SetPosition(glm::vec3(0.0f, 0.0f, 15.0f));
+                        camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
                         modelRotationX = 0.0f;
                         modelRotationY = 0.0f;
                         std::cout << "Camera and model rotation reset" << std::endl;
@@ -325,13 +322,6 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(modelRotationY), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::rotate(model, glm::radians(modelRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
-
-        glm::vec3 camPos;
-        camPos.x = cameraDistance * cos(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
-        camPos.y = cameraDistance * sin(glm::radians(cameraPitch));
-        camPos.z = cameraDistance * sin(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
-        camera.SetPosition(camPos);
-        camera.LookAt(glm::vec3(0.0f));
 
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = camera.GetProjectionMatrix(camera.GetAspectRatio());

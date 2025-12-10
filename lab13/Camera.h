@@ -42,7 +42,7 @@ public:
     void MoveRight(float velocity);
     void MoveUp(float velocity);
     void MoveDown(float velocity);
-
+    void Rotate(float yawOffset, float pitchOffset);
     void LookAt(const glm::vec3& target);
 
     glm::vec3 GetPosition() const { return position; }
