@@ -283,8 +283,20 @@ int main() {
             }
         }
 
-        for (auto& planet : planets)
+        for (auto& planet : planets) {
             planet.rotation += planet.selfRotationSpeed * deltaTime;
+            if (planet.orbitRadius > 0.0f) {
+                planet.orbitAngle += planet.orbitSpeed * deltaTime;
+
+                if (planet.orbitAngle > 360.0f) {
+                    planet.orbitAngle -= 360.0f;
+                }
+
+                float rad = glm::radians(planet.orbitAngle);
+                planet.position.x = planet.orbitRadius * cos(rad);
+                planet.position.z = planet.orbitRadius * sin(rad);
+            }
+        }
 
         float moveSpeed = 3.0f * deltaTime;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {

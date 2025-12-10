@@ -357,6 +357,7 @@ void Model::InitPlanets()
         0.0f,               // rotation
         0.0f,               // orbitRadius
         0.0f,               // orbitSpeed
+        0.0f,               // orbitAngle
         20.0f               // selfRotationSpeed
         });
 
@@ -380,6 +381,7 @@ void Model::InitPlanets()
             0.0f,             // rotation
             orbitRadius,      // orbitRadius
             5.0f + i * 2.0f,  // orbitSpeed
+            i * 90.0f,        // orbitAngle
             30.0f             // selfRotationSpeed
             });
     }

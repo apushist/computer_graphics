@@ -30,6 +30,7 @@ struct Planet {
     float rotation;
     float orbitRadius;
     float orbitSpeed;
+    float orbitAngle;        // Текущий угол на орбите
     float selfRotationSpeed;
 };
 
