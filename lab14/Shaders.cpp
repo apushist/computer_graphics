@@ -34,58 +34,134 @@ const char* fragmentShaderSource = R"(
     uniform sampler2D texture1;
     uniform vec3 viewPos;
 
-    // Точечный источник света
     struct PointLight {
         vec3 position;
         vec3 ambient;
         vec3 diffuse;
         vec3 specular;
-        bool enabled;
-        float constant;
-        float linear;    //коэффициент линейного затухания
-        float quadratic; //коэффициент квадратичного затухания
+        vec3 attenuation;
+        int enabled;
+    };
+
+    struct DirectionalLight {
+        vec3 direction;
+        vec3 ambient;
+        vec3 diffuse;
+        vec3 specular;
+        int enabled;
+    };
+
+    struct SpotLight {
+        vec3 position;
+        vec3 direction;
+        vec3 ambient;
+        vec3 diffuse;
+        vec3 specular;
+        vec3 attenuation;
+        float cutoff;
+        float outerCutoff;
+        int enabled;
     };
     
-    uniform PointLight pointLight;
+    uniform PointLight pointl;
+    uniform DirectionalLight dirl;
+    uniform SpotLight spotl;
     
-    vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 materialDiffuse) {
-        if (!light.enabled) return vec3(0.0);
+    vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 texColor) {
+        if (light.enabled == 0) return vec3(0.0);
         
-        // Фоновое освещение
-        vec3 ambient = light.ambient * materialDiffuse;
-        
-        // Рассеянное освещение
         vec3 lightDir = normalize(light.position - fragPos);
-        float diff = max(dot(normal, lightDir), 0.0);
-        vec3 diffuse = light.diffuse * diff * materialDiffuse;
         
-        // Отраженное освещение (specular)
+        // Ambient - фоновое освещение
+        vec3 ambient = light.ambient * texColor;
+        
+        // Diffuse - рассеянное освещение
+        float diff = max(dot(normal, lightDir), 0.0);
+        vec3 diffuse = light.diffuse * diff * texColor;
+        
+        // Specular - отраженное освещение
         vec3 reflectDir = reflect(-lightDir, normal);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-        vec3 specular = light.specular * spec * materialDiffuse;
+        vec3 specular = light.specular * spec * texColor;
         
-        // Затухание
+        // Attenuation - затухание
         float distance = length(light.position - fragPos);
-        float attenuation = 1.0 / (light.constant + light.linear * distance + 
-                                 light.quadratic * (distance * distance));
+        float attenuation = 1.0 / (light.attenuation.x + 
+                                 light.attenuation.y * distance + 
+                                 light.attenuation.z * (distance * distance));
         
-        ambient *= attenuation;
-        diffuse *= attenuation;
-        specular *= attenuation;
+        return (ambient + diffuse + specular) * attenuation;
+    }
+    
+    vec3 CalculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec3 texColor) {
+        if (light.enabled == 0) return vec3(0.0);
         
-        return (ambient + diffuse + specular);
+        vec3 lightDir = normalize(-light.direction);
+        
+        // Ambient
+        vec3 ambient = light.ambient * texColor;
+        
+        // Diffuse
+        float diff = max(dot(normal, lightDir), 0.0);
+        vec3 diffuse = light.diffuse * diff * texColor;
+        
+        // Specular
+        vec3 reflectDir = reflect(-lightDir, normal);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+        vec3 specular = light.specular * spec * texColor;
+        
+        return ambient + diffuse + specular;
+    }
+    
+    vec3 CalculateSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 texColor) {
+        if (light.enabled == 0) return vec3(0.0);
+        
+        vec3 lightDir = normalize(light.position - fragPos);
+        float theta = dot(lightDir, normalize(-light.direction));
+        
+        // Мягкие границы конуса
+        float epsilon = light.cutoff - light.outerCutoff;
+        float intensity = clamp((theta - light.outerCutoff) / epsilon, 0.0, 1.0);
+        
+        if (intensity > 0.0) {
+            // Ambient
+            vec3 ambient = light.ambient * texColor;
+            
+            // Diffuse
+            float diff = max(dot(normal, lightDir), 0.0);
+            vec3 diffuse = light.diffuse * diff * texColor;
+            
+            // Specular
+            vec3 reflectDir = reflect(-lightDir, normal);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+            vec3 specular = light.specular * spec * texColor;
+            
+            // Attenuation
+            float distance = length(light.position - fragPos);
+            float attenuation = 1.0 / (light.attenuation.x + 
+                                     light.attenuation.y * distance + 
+                                     light.attenuation.z * (distance * distance));
+            
+            return (ambient + diffuse + specular) * attenuation * intensity;
+        }
+        else {
+            return vec3(0.0);
+        }
     }
     
     void main() {
         vec3 norm = normalize(Normal);
         vec3 viewDir = normalize(viewPos - FragPos);
-        vec4 texColor = texture(texture1, TexCoord);
-        vec3 materialDiffuse = texColor.rgb;
+        vec3 texColor = texture(texture1, TexCoord).rgb;
         
-        // Освещение от точечного источника
-        vec3 result = CalculatePointLight(pointLight, norm, FragPos, viewDir, materialDiffuse);
+        vec3 result = vec3(0.0);
         
-        FragColor = vec4(result, texColor.a);
+        // Складываем освещение от всех источников
+        result += CalculateDirectionalLight(dirl, norm, viewDir, texColor);
+        result += CalculatePointLight(pointl, norm, FragPos, viewDir, texColor);
+        result += CalculateSpotLight(spotl, norm, FragPos, viewDir, texColor);
+        
+        FragColor = vec4(result, 1.0);
     }
 )";
 
