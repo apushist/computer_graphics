@@ -321,6 +321,7 @@ int main() {
     std::cout << "NUMPAD 1 - Phong shading" << std::endl;
     std::cout << "NUMPAD 2 - Toon shading" << std::endl;
     std::cout << "NUMPAD 3 - Minnaert shading" << std::endl;
+    std::cout << "NUMPAD 5 - Ashikhmin–Shirley shading" << std::endl;
 
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 15.0f));
     camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -547,6 +548,10 @@ int main() {
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad3)
                     {
                         staticObjects[currentObjectIndex].shadingModel = 2;
+                    }
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad5)
+                    {
+                        staticObjects[currentObjectIndex].shadingModel = 3;
                     }
                 }
             }

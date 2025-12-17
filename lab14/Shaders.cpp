@@ -37,6 +37,16 @@ const char* fragmentShaderSource = R"(
     
     const float minnaertK = 0.8;
     
+    const float PI = 3.1415926;
+
+    // параметры Ashikhmin-Shirley
+    const vec3 specColor = vec3(1.0);
+    const float kd = 0.3;  // коэффициент диффузии
+    const float ks = 0.7;  // коэффициент зеркала
+    const float mx = 10.0; // грубость по биномали
+    const float my = 10.0; // грубость по тангенсу
+    const float r0 = 0.8; // коэффициент ‘ренел€
+
     struct PointLight {
         vec3 position;
         vec3 ambient;
@@ -76,6 +86,38 @@ const char* fragmentShaderSource = R"(
         else if (d < 0.7) return 1.0;
         else return 1.3;
     }
+    
+    vec3 AshikhminShirleyBRDF(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 tangent, vec3 bitangent, vec3 texColor)
+    {
+        vec3 n2 = normalize(normal);
+        vec3 t2 = normalize(tangent);
+        vec3 b2 = normalize(bitangent);
+        vec3 l2 = normalize(lightDir);
+        vec3 v2 = normalize(viewDir);
+        vec3 h2 = normalize(l2 + v2);
+
+        float nv = max(dot(n2, v2), 0.0);
+        float nl = max(dot(n2, l2), 0.0);
+        float nh = max(dot(n2, h2), 0.0);
+        float hl = max(dot(h2, l2), 0.0);
+        float t1h = dot(b2, h2);
+        float t2h = dot(t2, h2);
+
+        // ƒиффузна€ составл€юща€
+        float rd = (28.0 / (23.0 * PI)) * (1.0 - pow(1.0 - 0.5 * nv, 5.0)) * (1.0 - pow(1.0 - 0.5 * nl, 5.0));
+
+        // —пекул€рна€ составл€юща€
+        float B = pow(nh, (mx * t1h * t1h + my * t2h * t2h) / max(1e-4, 1.0 - nh*nh));
+        float F = (r0 + (1.0 - r0) * pow(1.0 - hl, 5.0)) / max(1e-4, hl * max(nv, nl));
+        float rs = ks * B * F;
+
+        // »спользуем цвет из текстуры
+        vec3 diffuse = texColor * kd * (1.0 - ks) * rd;
+        vec3 specular = specColor * rs;
+
+        return nl * (diffuse + specular);
+    }
+
 
     vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 texColor)
     {
@@ -106,7 +148,13 @@ const char* fragmentShaderSource = R"(
         }
 
         vec3 diffuse = light.diffuse * diff * texColor;
-        
+        if (uShadingModel == 3)
+        {
+            vec3 tangent = normalize(vec3(0.0, 1.0, 0.0));
+            vec3 bitangent = normalize(cross(normal, tangent));
+            diffuse = AshikhminShirleyBRDF(normal, viewDir, lightDir, tangent, bitangent, texColor);
+        }
+
         // Specular - отраженное освещение
         vec3 specular = vec3(0.0);
         if (uShadingModel == 0)
@@ -153,7 +201,13 @@ const char* fragmentShaderSource = R"(
         }
 
         vec3 diffuse = light.diffuse * diff * texColor;
-        
+        if (uShadingModel == 3)
+        {
+            vec3 tangent = normalize(vec3(0.0, 1.0, 0.0));
+            vec3 bitangent = normalize(cross(normal, tangent));
+            diffuse = AshikhminShirleyBRDF(normal, viewDir, lightDir, tangent, bitangent, texColor);
+        }
+
         // Specular
         vec3 specular = vec3(0.0);
         if (uShadingModel == 0)
@@ -200,7 +254,13 @@ const char* fragmentShaderSource = R"(
             }
 
             vec3 diffuse = light.diffuse * diff * texColor;
-            
+            if (uShadingModel == 3)
+            {
+                vec3 tangent = normalize(vec3(0.0, 1.0, 0.0));
+                vec3 bitangent = normalize(cross(normal, tangent));
+                diffuse = AshikhminShirleyBRDF(normal, viewDir, lightDir, tangent, bitangent, texColor);
+            }
+
             // Specular
             vec3 specular = vec3(0.0);
             if (uShadingModel == 0)
