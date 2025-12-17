@@ -24,6 +24,8 @@ struct StaticObject {
     glm::vec3 scale;
     std::string name;
 
+    int shadingModel = 0;
+
     StaticObject(const StaticObject&) = delete;
     StaticObject& operator=(const StaticObject&) = delete;
 
@@ -31,6 +33,8 @@ struct StaticObject {
     StaticObject(StaticObject&&) = default;
     StaticObject& operator=(StaticObject&&) = default;
 };
+
+int currentObjectIndex = 0;
 
 struct PointLight {
     glm::vec3 position;
@@ -132,6 +136,7 @@ struct SpotLight {
 
 Camera camera;
 GLuint shaderProgram;
+GLuint outlineShaderProgram;
 float deltaTime = 0.0f;
 sf::Clock gameClock;
 
@@ -255,6 +260,11 @@ int main() {
         return -1;
     }
 
+    if (!InitOutlineShader(outlineShaderProgram)) {
+        std::cerr << "Failed to initialize outline shader!" << std::endl;
+        return -1;
+    }
+
     if (!LoadStaticScene()) {
         std::cerr << "Failed to load static scene!" << std::endl;
         return -1;
@@ -303,6 +313,14 @@ int main() {
     std::cout << "Mouse wheel - Zoom" << std::endl;
     std::cout << "R - Reset camera" << std::endl;
     std::cout << "ESC - Exit" << std::endl;
+
+    std::cout << "\n=== OBJECTS SWITCH ===" << std::endl;
+    std::cout << "NUMPAD 4/6 - Switch objects" << std::endl;
+
+    std::cout << "\n=== SHADING MODEL SWITCH ===" << std::endl;
+    std::cout << "NUMPAD 1 - Phong shading" << std::endl;
+    std::cout << "NUMPAD 2 - Toon shading" << std::endl;
+    std::cout << "NUMPAD 3 - Minnaert shading" << std::endl;
 
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 15.0f));
     camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -485,18 +503,50 @@ int main() {
                         directionalLight.direction.y += 0.1f;
                     }
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::Left) {
-                        directionalLight.direction.x -= 0.1f;
-                    }
-                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Right) {
                         directionalLight.direction.x += 0.1f;
                     }
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Right) {
+                        directionalLight.direction.x -= 0.1f;
+                    }
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::C) {
-                        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
                         directionalLight.direction = glm::vec3(rotation * glm::vec4(directionalLight.direction, 0.0f));
                     }
                     else if (keyEvent->scancode == sf::Keyboard::Scancode::V) {
-                        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
                         directionalLight.direction = glm::vec3(rotation * glm::vec4(directionalLight.direction, 0.0f));
+                    }
+
+                    // ПЕРЕКЛЮЧЕНИЕ ТЕКУЩЕГО ОБЪЕКТА
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad4)
+                    {
+                        currentObjectIndex--;
+                        if (currentObjectIndex < 0)
+                        {
+                            currentObjectIndex = staticObjects.size() - 1;
+                        }
+                    }
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad6)
+                    {
+                        currentObjectIndex++;
+                        if (currentObjectIndex >= staticObjects.size())
+                        {
+                            currentObjectIndex = 0;
+                        }
+                    }
+
+                    // ПЕРЕКЛЮЧЕНИЕ МОДЕЛЕЙ ОСВЕЩЕНИЯ
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad1)
+                    {
+                        staticObjects[currentObjectIndex].shadingModel = 0;
+                    }
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad2)
+                    {
+                        staticObjects[currentObjectIndex].shadingModel = 1;
+                    }
+                    else if (keyEvent->scancode == sf::Keyboard::Scancode::Numpad3)
+                    {
+                        staticObjects[currentObjectIndex].shadingModel = 2;
                     }
                 }
             }
@@ -534,12 +584,48 @@ int main() {
 
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
+            glUniform1i(
+                glGetUniformLocation(shaderProgram, "uShadingModel"),
+                obj.shadingModel
+            );
+
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, obj.textureID);
             glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
 
             obj.model->Draw();
         }
+
+        // Контур для текущего объекта
+        const auto& selected = staticObjects[currentObjectIndex];
+
+        glUseProgram(outlineShaderProgram);
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, selected.position);
+        model = glm::rotate(model, glm::radians(selected.rotation.x), glm::vec3(1, 0, 0));
+        model = glm::rotate(model, glm::radians(selected.rotation.y), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, glm::radians(selected.rotation.z), glm::vec3(0, 0, 1));
+        model = glm::scale(model, selected.scale);
+
+        glUniformMatrix4fv(glGetUniformLocation(outlineShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(outlineShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(outlineShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+        glUniform1f(glGetUniformLocation(outlineShaderProgram, "outlineWidth"), 0.03f);
+        glUniform3f(glGetUniformLocation(outlineShaderProgram, "outlineColor"), 1.0f, 0.2f, 0.2f);
+
+        selected.model->Draw();
+
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
+        glDepthFunc(GL_LESS);
+
 
         if (lightSphereModel && lightSphereModel->IsInitialized() && pointLight.enabled) {
             glm::mat4 lightModel = glm::mat4(1.0f);
