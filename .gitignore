@@ -90,6 +90,7 @@ StyleCopReport.xml
 
 # Разрешаем obj файлы в папке lab13/models
 !lab13/models/*.obj
+!lab14/models/*.obj
 
 *.idb
 *.iobj
