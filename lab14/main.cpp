@@ -157,19 +157,19 @@ bool LoadStaticScene() {
 
     // Объект 1 - Куб (пол)
     StaticObject obj1;
-    /*obj1.name = "Metal_table";
+    obj1.name = "Metal_table";
     obj1.model = std::make_unique<Model>();
-    if (!obj1.model->LoadFromOBJ("models/Metal_table.obj")) {
+    if (!obj1.model->LoadFromOBJ("models/table.obj")) {
         std::cerr << "Failed to load Metal_table.obj" << std::endl;
         return false;
     }
-    obj1.textureID = LoadTextureFromFile("textures/metal.png");
+    obj1.textureID = LoadTextureFromFile("textures/tabletexture_Albedo.png");
 
-    obj1.position = glm::vec3(3.0f, -5.6f, 0.0f);
-    obj1.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-    obj1.scale = glm::vec3(0.02f, 0.02f, 0.02f);*/
+    obj1.position = glm::vec3(-6.0f, -4.0f, -2.0f);
+    obj1.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    obj1.scale = glm::vec3(3.0f, 2.0f, 10.0f);
 
-    obj1.name = "Cube";
+    /*obj1.name = "Cube";
     obj1.model = std::make_unique<Model>();
     if (!obj1.model->LoadFromOBJ("models/cube.obj")) {
         std::cerr << "Failed to load cube.obj" << std::endl;
@@ -179,7 +179,7 @@ bool LoadStaticScene() {
     obj1.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
     obj1.scale = glm::vec3(10.0f, 10.0f, 10.0f);
 
-    obj1.textureID = LoadTextureFromFile("textures/ceramic.jpg");
+    obj1.textureID = LoadTextureFromFile("textures/ceramic.jpg");*/
     staticObjects.push_back(std::move(obj1));
 
     // Сфера
@@ -224,19 +224,33 @@ bool LoadStaticScene() {
     obj4.scale = glm::vec3(0.008f, 0.008f, 0.008f);
     staticObjects.push_back(std::move(obj4));
 
-    //
-    //StaticObject obj5;
-    //obj5.name = "Elephant";
-    //obj5.model = std::make_unique<Model>();
-    //if (!obj5.model->LoadFromOBJ("models/Elephant.obj")) {
-    //    std::cerr << "Failed to load Elephant.obj" << std::endl;
-    //    return false;
-    //}
-    //obj5.textureID = LoadTextureFromFile("textures/Elephant.png");
-    //obj5.position = glm::vec3(5.0f, -0.65f, 0.0f);
-    //obj5.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-    //obj5.scale = glm::vec3(0.005f, 0.005f, 0.005f);
-    //staticObjects.push_back(std::move(obj5));
+    // Чашка-жаба
+    StaticObject obj5;
+    obj5.name = "Frog_Cup";
+    obj5.model = std::make_unique<Model>();
+    if (!obj5.model->LoadFromOBJ("models/Frog_Cup.obj")) {
+        std::cerr << "Failed to load Frog_Cup.obj" << std::endl;
+        return false;
+    }
+    obj5.textureID = LoadTextureFromFile("textures/Frog_Cup_Material.png");
+    obj5.position = glm::vec3(3.0f, -0.9f, 2.5f);
+    obj5.rotation = glm::vec3(0.0f, 40.0f, 0.0f);
+    obj5.scale = glm::vec3(5.0f, 5.0f, 5.0f);
+    staticObjects.push_back(std::move(obj5));
+
+    // Женщина
+    StaticObject obj6;
+    obj6.name = "Woman";
+    obj6.model = std::make_unique<Model>();
+    if (!obj6.model->LoadFromOBJ("models/AngelaMartinSprinkles.obj")) {
+        std::cerr << "Failed to load AngelaMartinSprinkles.obj" << std::endl;
+        return false;
+    }
+    obj6.textureID = LoadTextureFromFile("textures/AngelaMartinSprinkles_material.tga");
+    obj6.position = glm::vec3(-1.0f, -0.9f, 2.0f);
+    obj6.rotation = glm::vec3(0.0f, 30.0f, 0.0f);
+    obj6.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+    staticObjects.push_back(std::move(obj6));
 
     return true;
 }
